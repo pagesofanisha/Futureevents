@@ -63,38 +63,51 @@ export default function HeroSlideshow({ onOpenLightbox, onOpenContactModal }) {
 
   return (
     <div className="w-full flex flex-col bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-gray-100 dark:border-zinc-800 overflow-hidden transition-colors">
-      {/* Slideshow Display Area */}
-      <div className="relative w-full h-[360px] sm:h-[440px] md:h-[480px] bg-zinc-900 group overflow-hidden">
+      {/* Slideshow Display Area with Horizontal Sliding Track */}
+      <div className="relative w-full h-[360px] sm:h-[440px] md:h-[480px] bg-zinc-900 group overflow-hidden select-none">
         {totalImages > 0 ? (
           <>
-            <img
-              key={currentIndex}
-              src={currentPhoto?.url}
-              alt={currentPhoto?.caption || "Future Events Stage Setup"}
-              onClick={() => onOpenLightbox(allPhotos, currentIndex)}
-              className="w-full h-full object-cover cursor-pointer transition-opacity duration-300 ease-in-out hover:scale-102"
-            />
-            {/* Gradient Overlays for contrast */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none" />
+            {/* Sliding Track that moves smoothly from right to left */}
+            <div
+              className="flex h-full w-full transition-transform duration-700 ease-in-out"
+              style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+            >
+              {allPhotos.map((photo, idx) => (
+                <div
+                  key={photo.id || idx}
+                  className="w-full h-full flex-shrink-0 relative cursor-pointer"
+                  onClick={() => onOpenLightbox(allPhotos, idx)}
+                >
+                  <img
+                    src={photo.url}
+                    alt={photo.caption || "Future Events Stage Setup"}
+                    className="w-full h-full object-cover"
+                    loading={idx <= 3 ? "eager" : "lazy"}
+                  />
+                  {/* Gradient Overlays for contrast */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none" />
+                </div>
+              ))}
+            </div>
 
-            {/* Manual Navigation Left Button - Pink background, manual click only */}
+            {/* Manual Navigation Left Button - Pink background */}
             <button
               onClick={handlePrev}
-              className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-[#E91E63] hover:bg-[#D81B60] text-white flex items-center justify-center shadow-lg transition-transform transform active:scale-90 focus:outline-none"
-              title="Previous Photo (Manual click)"
+              className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#E91E63] hover:bg-[#D81B60] text-white flex items-center justify-center shadow-lg transition-transform transform active:scale-90 focus:outline-none"
+              title="Previous Photo"
               aria-label="Previous Photo"
             >
-              <ChevronLeft className="w-6 h-6" />
+              <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
 
-            {/* Manual Navigation Right Button - Pink background, manual click only */}
+            {/* Manual Navigation Right Button - Pink background */}
             <button
               onClick={handleNext}
-              className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-[#E91E63] hover:bg-[#D81B60] text-white flex items-center justify-center shadow-lg transition-transform transform active:scale-90 focus:outline-none"
-              title="Next Photo (Manual click)"
+              className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#E91E63] hover:bg-[#D81B60] text-white flex items-center justify-center shadow-lg transition-transform transform active:scale-90 focus:outline-none"
+              title="Next Photo"
               aria-label="Next Photo"
             >
-              <ChevronRight className="w-6 h-6" />
+              <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
 
             {/* Dynamic Image Counter: "Image X of Y" */}
@@ -104,7 +117,7 @@ export default function HeroSlideshow({ onOpenLightbox, onOpenContactModal }) {
 
             {/* Bottom Caption Pill */}
             {currentPhoto?.caption && (
-              <div className="absolute bottom-4 left-4 right-4 z-10">
+              <div className="absolute bottom-4 left-4 right-4 z-10 pointer-events-none">
                 <span className="inline-block bg-black/60 backdrop-blur-md text-white text-xs sm:text-sm px-3.5 py-1 rounded-lg border border-white/10 max-w-xl truncate">
                   {currentPhoto.caption}
                 </span>
