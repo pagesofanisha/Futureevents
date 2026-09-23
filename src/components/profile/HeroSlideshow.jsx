@@ -9,7 +9,8 @@ import {
   Share2,
   Edit3,
   Phone,
-  ShieldCheck
+  ShieldCheck,
+  Sparkles
 } from "lucide-react";
 import { useData } from "../../context/DataContext";
 
