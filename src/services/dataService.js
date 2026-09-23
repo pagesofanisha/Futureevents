@@ -152,6 +152,19 @@ export async function getBusinessInfo() {
     biz.logoUrl = "";
     hasChanged = true;
   }
+  if (biz.profileImage && biz.profileImage.includes("unsplash.com")) {
+    biz.profileImage = "";
+    hasChanged = true;
+  }
+  if (biz.vendors && Array.isArray(biz.vendors)) {
+    biz.vendors = biz.vendors.map((v) => {
+      if (v.image && v.image.includes("unsplash.com")) {
+        hasChanged = true;
+        return { ...v, image: "" };
+      }
+      return v;
+    });
+  }
   if (biz.teamMembers && biz.teamMembers.length > 1) {
     biz.teamMembers = ["Kishore (Founder & Lead Planner)"];
     hasChanged = true;
@@ -235,13 +248,35 @@ export async function getAlbums() {
   if (albums && Array.isArray(albums)) {
     let changed = false;
     albums = albums.map((a) => {
-      // If thumbnail is empty or pointing to default unsplash image and album has user photos, use first photo as cover
-      if ((!a.thumbnail || a.thumbnail.includes("unsplash.com")) && a.photos && a.photos.length > 0) {
-        changed = true;
-        return { ...a, thumbnail: a.photos[0].url };
+      // 1. Strip any default/dummy unsplash images from album photos
+      let filteredPhotos = a.photos;
+      if (Array.isArray(a.photos)) {
+        filteredPhotos = a.photos.filter((p) => p.url && !p.url.includes("unsplash.com"));
+        if (filteredPhotos.length !== a.photos.length) {
+          changed = true;
+        }
+      } else {
+        filteredPhotos = [];
       }
-      return a;
+
+      // 2. Clean thumbnail if it points to unsplash.com
+      let thumb = a.thumbnail;
+      if (thumb && thumb.includes("unsplash.com")) {
+        thumb = filteredPhotos[0]?.url || "";
+        changed = true;
+      } else if (!thumb && filteredPhotos.length > 0) {
+        thumb = filteredPhotos[0].url;
+        changed = true;
+      }
+
+      return {
+        ...a,
+        photos: filteredPhotos,
+        photoCount: filteredPhotos.length,
+        thumbnail: thumb
+      };
     });
+
     if (changed) {
       setLocalItem(STORAGE_KEYS.ALBUMS, albums);
     }

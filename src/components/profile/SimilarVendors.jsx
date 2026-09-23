@@ -27,11 +27,21 @@ export default function SimilarVendors() {
             className="flex items-center space-x-3.5 p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-zinc-800/60 transition-colors group cursor-pointer"
             onClick={() => alert(`Selected vendor: ${vendor.name} (${vendor.location})`)}
           >
-            <img
-              src={vendor.image}
-              alt={vendor.name}
-              className="w-16 h-16 rounded-xl object-cover border border-gray-200 dark:border-zinc-700 flex-shrink-0 group-hover:scale-105 transition-transform"
-            />
+            {vendor.image && !vendor.image.includes("unsplash.com") ? (
+              <img
+                src={vendor.image}
+                alt={vendor.name}
+                className="w-14 h-14 rounded-xl object-cover border border-gray-200 dark:border-zinc-700 flex-shrink-0 group-hover:scale-105 transition-transform"
+              />
+            ) : (
+              <div className="w-14 h-14 rounded-xl bg-gradient-to-tr from-pink-600 to-[#E91E63] text-white flex items-center justify-center flex-shrink-0 font-black text-xs shadow-sm">
+                {vendor.name
+                  .split(" ")
+                  .map((w) => w[0])
+                  .slice(0, 2)
+                  .join("")}
+              </div>
+            )}
             <div className="flex-1 min-w-0">
               <div className="flex justify-between items-start">
                 <h4 className="text-xs font-bold text-gray-900 dark:text-white truncate group-hover:text-[#E91E63] transition-colors">

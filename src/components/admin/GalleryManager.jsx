@@ -304,11 +304,17 @@ export default function GalleryManager() {
                   }`}
                 >
                   <div className="flex items-center space-x-3">
-                    <img
-                      src={thumb || "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=150&q=80"}
-                      alt=""
-                      className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-gray-200 dark:border-zinc-700"
-                    />
+                    {thumb && !thumb.includes("unsplash.com") ? (
+                      <img
+                        src={thumb}
+                        alt=""
+                        className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-gray-200 dark:border-zinc-700"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-lg bg-pink-100 dark:bg-pink-950/60 text-[#E91E63] flex items-center justify-center flex-shrink-0 border border-pink-200 dark:border-pink-900">
+                        <ImageIcon className="w-5 h-5" />
+                      </div>
+                    )}
 
                     <div className="flex-1 min-w-0">
                       {isEditing ? (
@@ -379,11 +385,23 @@ export default function GalleryManager() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 mb-4 border-b border-gray-100 dark:border-zinc-800">
                 <div className="flex items-center space-x-3.5">
                   <div className="relative group flex-shrink-0">
-                    <img
-                      src={currentAlbum.thumbnail || currentAlbum.photos?.[0]?.url || "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=150&q=80"}
-                      alt="Cover"
-                      className="w-14 h-14 rounded-xl object-cover border-2 border-[#E91E63] shadow-md bg-zinc-800"
-                    />
+                    {currentAlbum.thumbnail && !currentAlbum.thumbnail.includes("unsplash.com") ? (
+                      <img
+                        src={currentAlbum.thumbnail}
+                        alt="Cover"
+                        className="w-14 h-14 rounded-xl object-cover border-2 border-[#E91E63] shadow-md bg-zinc-800"
+                      />
+                    ) : currentAlbum.photos && currentAlbum.photos[0]?.url && !currentAlbum.photos[0].url.includes("unsplash.com") ? (
+                      <img
+                        src={currentAlbum.photos[0].url}
+                        alt="Cover"
+                        className="w-14 h-14 rounded-xl object-cover border-2 border-[#E91E63] shadow-md bg-zinc-800"
+                      />
+                    ) : (
+                      <div className="w-14 h-14 rounded-xl bg-pink-100 dark:bg-pink-950/60 text-[#E91E63] flex items-center justify-center border-2 border-[#E91E63] shadow-md">
+                        <ImageIcon className="w-6 h-6" />
+                      </div>
+                    )}
                     <span className="absolute -bottom-1 -right-1 bg-[#E91E63] text-white text-[9px] font-black px-1.5 py-0.5 rounded-full shadow flex items-center space-x-0.5">
                       <Sparkles className="w-2.5 h-2.5" />
                       <span>Cover</span>

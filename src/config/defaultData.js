@@ -11,7 +11,7 @@ export const initialBusinessData = {
   priceStarting: "₹ 99,000",
   priceUnit: "Starting Price (Planning Fee)",
   logoUrl: "",
-  profileImage: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80",
+  profileImage: "",
   description: "Based in Ramapuram, Chennai, Future Event Organization is a premier complete event planning and decor company led by Kishore. We specialize in curating breathtaking weddings, engagements, traditional baby showers (valaikappu), birthday celebrations, catering, and bespoke stage decors. With an eye for creative elegance and flawless execution, our dedicated team ensures your special celebrations become cherished lifelong memories.",
   yearsOfExperience: 6,
   planningSince: 2018,
@@ -55,7 +55,7 @@ export const initialBusinessData = {
       name: "Cinematic & Candid Wedding Coverage",
       description: "Traditional photography, candid wedding film, 4K drone shoots, pre-wedding & post-wedding shoots.",
       priceStarting: "₹ 45,000",
-      image: "https://images.unsplash.com/photo-1606800052052-a08af7148866?auto=format&fit=crop&w=600&q=80"
+      image: ""
     },
     {
       id: "v-dj",
@@ -63,7 +63,7 @@ export const initialBusinessData = {
       name: "Club DJ, Concert Sound & Truss Lighting",
       description: "High-power sound systems, live DJ mixing for Sangeet & Reception, beam lights, and cold spark pyros.",
       priceStarting: "₹ 25,000",
-      image: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=600&q=80"
+      image: ""
     },
     {
       id: "v-decor",
@@ -71,7 +71,7 @@ export const initialBusinessData = {
       name: "Bespoke Royal Mandap & Florals",
       description: "Custom floral mandaps, grand reception backdrops, floral pathway arches, neon signs, and fairy lighting.",
       priceStarting: "₹ 60,000",
-      image: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=600&q=80"
+      image: ""
     },
     {
       id: "v-catering",
@@ -79,7 +79,7 @@ export const initialBusinessData = {
       name: "Authentic South Indian & Multi-Cuisine Feasts",
       description: "Traditional banana leaf feast, live chaat stalls, mocktail counters, desserts, and royal wedding buffet.",
       priceStarting: "₹ 450 / plate",
-      image: "https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&w=600&q=80"
+      image: ""
     },
     {
       id: "v-makeup",
@@ -87,7 +87,7 @@ export const initialBusinessData = {
       name: "Bridal HD Artistry & Styling",
       description: "HD bridal makeup, hair styling, saree draping, mehendi artists, and groom grooming.",
       priceStarting: "₹ 15,000",
-      image: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=600&q=80"
+      image: ""
     }
   ],
   decorPolicy: "Work with in-house & outside decorators tailored to client venue preferences",
@@ -156,10 +156,7 @@ export const initialReviewsData = [
     reviewText: "We booked Future Event Organization for my engagement, and they delivered outstanding service. Their decoration work was elegant, creative, and perfectly aligned with my expectations. The team’s dedication and professionalism truly made the day unforgettable.",
     spendAmount: "₹ 1,80,000",
     tags: ["Quality of Work", "Professionalism", "Elegant Decor"],
-    photos: [
-      "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=600&q=80",
-      "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=600&q=80"
-    ],
+    photos: [],
     isPinned: true,
     ownerResponse: "Happy to hear from you mam thank you ☺️",
     ownerResponseDate: "6 months ago"
@@ -174,9 +171,7 @@ export const initialReviewsData = [
     reviewText: "We planned for Baby shower function, they provide a awesome valaikappu lunch and neat service. We and our Guest are happy with food.",
     spendAmount: "₹ 1,20,000",
     tags: ["Authentic Catering", "Neat Service", "Value for Money"],
-    photos: [
-      "https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&w=600&q=80"
-    ],
+    photos: [],
     isPinned: true,
     ownerResponse: "Thank you so much for your kind words! Delighted that your family loved the lunch and arrangements!",
     ownerResponseDate: "5 months ago"
@@ -190,9 +185,7 @@ export const initialReviewsData = [
     reviewText: "We planned birthday party for my son we are really got satisfied by there team thank you Kishore 👍",
     spendAmount: "₹ 75,000",
     tags: ["Birthday Theme", "Dedication", "Great Team"],
-    photos: [
-      "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?auto=format&fit=crop&w=600&q=80"
-    ],
+    photos: [],
     isPinned: true,
     ownerResponse: "Happy to hear from you sir 😊",
     ownerResponseDate: "10 months ago"
@@ -206,9 +199,7 @@ export const initialReviewsData = [
     reviewText: "I highly recommend Future Event Organization for anyone looking for event management. Kishore brother took care of every single requirement for our reception at Chennai with supreme care. Appreciate the team and thanks for wonderful decor 🤗",
     spendAmount: "₹ 3,50,000",
     tags: ["Stress-Free Planning", "Stage Decor", "Superb Hospitality"],
-    photos: [
-      "https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=600&q=80"
-    ],
+    photos: [],
     isPinned: false,
     ownerResponse: "Hearty congratulations to the lovely couple! Thank you for trusting us with your special day ✨",
     ownerResponseDate: "3 months ago"
@@ -235,9 +226,7 @@ export const initialReviewsData = [
     reviewText: "Booked them for our wedding muhurtham and evening musical sangeet. Kishore's team managed vendor coordination smoothly. Five stars all the way!",
     spendAmount: "₹ 4,00,000",
     tags: ["Top Tier Wedding", "Music & Decor"],
-    photos: [
-      "https://images.unsplash.com/photo-1545232979-8bf68ee9b1af?auto=format&fit=crop&w=600&q=80"
-    ],
+    photos: [],
     isPinned: false,
     ownerResponse: "Thank you Praveen & Nandhini! Wishing you both a lifetime of happiness!",
     ownerResponseDate: "2 months ago"
@@ -246,104 +235,64 @@ export const initialReviewsData = [
 
 export const initialAlbumsData = [
   {
+    id: "album-babyshower",
+    name: "Baby Shower (Valaikappu)",
+    category: "Baby Shower (Valaikappu)",
+    thumbnail: "",
+    photoCount: 0,
+    description: "Traditional valaikappu floral stages, seating, and ceremony setups.",
+    createdDate: "2024-03-20",
+    photos: []
+  },
+  {
     id: "album-weddings",
-    name: "Golden Glimmer Weddings",
+    name: "Weddings & Mandaps",
     category: "Weddings",
-    thumbnail: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80",
-    photoCount: 10,
+    thumbnail: "",
+    photoCount: 0,
     description: "Royal stage decors, traditional South Indian mandaps, and grand floral installations.",
     createdDate: "2024-01-15",
-    photos: [
-      { id: "p1", url: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80", caption: "Grand floral mandap entrance with traditional marigold garlands" },
-      { id: "p2", url: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1200&q=80", caption: "Illuminated evening reception stage with warm fairy lighting" },
-      { id: "p3", url: "https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=1200&q=80", caption: "Couple stage with pastel rose backdrop" },
-      { id: "p4", url: "https://images.unsplash.com/photo-1545232979-8bf68ee9b1af?auto=format&fit=crop&w=1200&q=80", caption: "Bespoke banquet hall ceiling draping" },
-      { id: "p5", url: "https://images.unsplash.com/photo-1532712938310-34cb3982ef74?auto=format&fit=crop&w=1200&q=80", caption: "Floral walkway canopy and walkway lanterns" },
-      { id: "p6", url: "https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?auto=format&fit=crop&w=1200&q=80", caption: "Outdoor lawn reception setup" },
-      { id: "p7", url: "https://images.unsplash.com/photo-1469371670807-013ccf25f16a?auto=format&fit=crop&w=1200&q=80", caption: "Intricate floral wall photo booth" },
-      { id: "p8", url: "https://images.unsplash.com/photo-1520854221256-17451cc331bf?auto=format&fit=crop&w=1200&q=80", caption: "Bridal entry floral chadar and pyrotechnic cold sparks" },
-      { id: "p9", url: "https://images.unsplash.com/photo-1606800052052-a08af7148866?auto=format&fit=crop&w=1200&q=80", caption: "Muhurtham traditional brass lamp and flower arrangements" },
-      { id: "p10", url: "https://images.unsplash.com/photo-1529636798458-92182e662485?auto=format&fit=crop&w=1200&q=80", caption: "Grand wedding pathway floral pillars" }
-    ]
+    photos: []
   },
   {
     id: "album-photography",
     name: "Photography & Moments",
     category: "Photography",
-    thumbnail: "https://images.unsplash.com/photo-1606800052052-a08af7148866?auto=format&fit=crop&w=800&q=80",
-    photoCount: 6,
+    thumbnail: "",
+    photoCount: 0,
     description: "Candid emotional wedding portraits, rituals, and unforgettable family smiles.",
     createdDate: "2024-02-10",
-    photos: [
-      { id: "p11", url: "https://images.unsplash.com/photo-1606800052052-a08af7148866?auto=format&fit=crop&w=1200&q=80", caption: "Candid bride portrait in silk saree" },
-      { id: "p12", url: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80", caption: "Exchange of floral garlands" },
-      { id: "p13", url: "https://images.unsplash.com/photo-1532712938310-34cb3982ef74?auto=format&fit=crop&w=1200&q=80", caption: "Emotional blessings ritual with family" },
-      { id: "p14", url: "https://images.unsplash.com/photo-1529636798458-92182e662485?auto=format&fit=crop&w=1200&q=80", caption: "Groom procession and celebration" },
-      { id: "p15", url: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1200&q=80", caption: "Couple portraits under fairy light canopy" },
-      { id: "p16", url: "https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?auto=format&fit=crop&w=1200&q=80", caption: "Artistic mehendi detail photography" }
-    ]
+    photos: []
   },
   {
     id: "album-haldi",
     name: "Haldi & Sangeet Celebrations",
-    category: "Haldi",
-    thumbnail: "https://images.unsplash.com/photo-1545232979-8bf68ee9b1af?auto=format&fit=crop&w=800&q=80",
-    photoCount: 5,
+    category: "Haldi & Sangeet",
+    thumbnail: "",
+    photoCount: 0,
     description: "Vibrant yellow marigold decors, traditional urlis, and joyful festive setups.",
     createdDate: "2024-03-01",
-    photos: [
-      { id: "p17", url: "https://images.unsplash.com/photo-1545232979-8bf68ee9b1af?auto=format&fit=crop&w=1200&q=80", caption: "Traditional brass urli with marigold floral carpet" },
-      { id: "p18", url: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80", caption: "Yellow drape photo backdrop with floral tassels" },
-      { id: "p19", url: "https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=1200&q=80", caption: "Festive floral swing (Oonjal) setup" },
-      { id: "p20", url: "https://images.unsplash.com/photo-1532712938310-34cb3982ef74?auto=format&fit=crop&w=1200&q=80", caption: "Haldi fun with colorful smoke bombs" },
-      { id: "p21", url: "https://images.unsplash.com/photo-1469371670807-013ccf25f16a?auto=format&fit=crop&w=1200&q=80", caption: "Festive props and decorated umbrellas" }
-    ]
+    photos: []
   },
   {
     id: "album-catering",
-    name: "Catering & Valaikappu Feasts",
-    category: "Catering",
-    thumbnail: "https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&w=800&q=80",
-    photoCount: 5,
+    name: "Catering & Feasts",
+    category: "Catering & Food",
+    thumbnail: "",
+    photoCount: 0,
     description: "Authentic South Indian plantain leaf spreads, variety rice, and dessert buffet.",
     createdDate: "2024-03-20",
-    photos: [
-      { id: "p22", url: "https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&w=1200&q=80", caption: "Grand South Indian wedding feast on banana leaf" },
-      { id: "p23", url: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1200&q=80", caption: "Traditional 7-variety rice spread for Baby Shower (Valaikappu)" },
-      { id: "p24", url: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1200&q=80", caption: "Live dessert and sweet stall arrangement" },
-      { id: "p25", url: "https://images.unsplash.com/photo-1532712938310-34cb3982ef74?auto=format&fit=crop&w=1200&q=80", caption: "Neat catering uniform service team" },
-      { id: "p26", url: "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?auto=format&fit=crop&w=1200&q=80", caption: "Welcome drinks and mocktail counter" }
-    ]
+    photos: []
   },
   {
     id: "album-birthdays",
-    name: "Birthday Celebrations & Themes",
+    name: "Birthdays & Special Events",
     category: "Birthdays",
-    thumbnail: "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?auto=format&fit=crop&w=800&q=80",
-    photoCount: 4,
-    description: "Magical balloon arches, themed character backdrops, and joyous cake cutting setups.",
+    thumbnail: "",
+    photoCount: 0,
+    description: "Theme setups, organic balloon arches, marquee letters, and dessert backdrops.",
     createdDate: "2024-04-05",
-    photos: [
-      { id: "p27", url: "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?auto=format&fit=crop&w=1200&q=80", caption: "Grand pastel organic balloon arch backdrop" },
-      { id: "p28", url: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80", caption: "Illuminated marquee LED age number with balloon pillars" },
-      { id: "p29", url: "https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=1200&q=80", caption: "Kids entertainment and fun corner" },
-      { id: "p30", url: "https://images.unsplash.com/photo-1520854221256-17451cc331bf?auto=format&fit=crop&w=1200&q=80", caption: "Custom designer dessert table" }
-    ]
-  },
-  {
-    id: "album-communion",
-    name: "Holy Communion & Receptions",
-    category: "Special Events",
-    thumbnail: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=800&q=80",
-    photoCount: 4,
-    description: "Pristine white floral themes, church decors, and elegant banquet tables.",
-    createdDate: "2024-04-18",
-    photos: [
-      { id: "p31", url: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1200&q=80", caption: "Pure white rose floral cross and altar backdrop" },
-      { id: "p32", url: "https://images.unsplash.com/photo-1529636798458-92182e662485?auto=format&fit=crop&w=1200&q=80", caption: "Banquet dining centerpiece with candlelight" },
-      { id: "p33", url: "https://images.unsplash.com/photo-1545232979-8bf68ee9b1af?auto=format&fit=crop&w=1200&q=80", caption: "Communion celebration cake table with floral garland" },
-      { id: "p34", url: "https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?auto=format&fit=crop&w=1200&q=80", caption: "Entrance welcome mirror with personalized calligraphy" }
-    ]
+    photos: []
   }
 ];
 
@@ -378,7 +327,7 @@ export const similarVendorsData = [
     rating: 4.9,
     reviewCount: 121,
     startingPrice: "₹ 2,50,000",
-    image: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=500&q=80"
+    image: ""
   },
   {
     id: "sim-2",
@@ -387,7 +336,7 @@ export const similarVendorsData = [
     rating: 4.9,
     reviewCount: 36,
     startingPrice: "₹ 5,00,000",
-    image: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=500&q=80"
+    image: ""
   },
   {
     id: "sim-3",
@@ -396,6 +345,6 @@ export const similarVendorsData = [
     rating: 5.0,
     reviewCount: 27,
     startingPrice: "₹ 1,50,000",
-    image: "https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=500&q=80"
+    image: ""
   }
 ];

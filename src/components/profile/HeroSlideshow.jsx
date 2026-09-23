@@ -16,8 +16,10 @@ import { useData } from "../../context/DataContext";
 export default function HeroSlideshow({ onOpenLightbox, onOpenContactModal }) {
   const { businessData, contactData, albums } = useData();
 
-  // Aggregate all photos from albums for the hero gallery slideshow
-  const allPhotos = albums.flatMap(a => a.photos || []);
+  // Aggregate all photos from albums for the hero gallery slideshow (excluding any dummy unsplash photos)
+  const allPhotos = albums
+    .flatMap((a) => a.photos || [])
+    .filter((p) => p.url && !p.url.includes("unsplash.com"));
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isShortlisted, setIsShortlisted] = useState(false);
@@ -125,10 +127,33 @@ export default function HeroSlideshow({ onOpenLightbox, onOpenContactModal }) {
             )}
           </>
         ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 p-8 text-center">
-            <Camera className="w-12 h-12 mb-3 text-gray-500 opacity-60" />
-            <p className="text-base font-semibold text-gray-300">No images uploaded yet</p>
-            <p className="text-xs text-gray-500 mt-1">Upload photos from the admin dashboard to showcase albums here.</p>
+          <div className="w-full h-full flex flex-col items-center justify-center p-8 text-center bg-gradient-to-br from-zinc-900 via-zinc-850 to-zinc-900 text-white relative overflow-hidden select-none">
+            {/* Ambient decorative lighting */}
+            <div className="absolute -top-24 -left-24 w-72 h-72 bg-[#E91E63]/20 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-24 -right-24 w-72 h-72 bg-pink-500/10 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="relative z-10 max-w-md mx-auto space-y-3">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#E91E63] to-pink-500 text-white flex items-center justify-center mx-auto shadow-xl shadow-pink-500/25">
+                <Sparkles className="w-8 h-8" />
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+                {businessData.businessName || "Future Event Organization"}
+              </h2>
+              <p className="text-xs text-gray-300 leading-relaxed max-w-sm mx-auto">
+                Ramapuram, Chennai · WedMeGood Certified Partner
+                <br />
+                Weddings · Traditional Baby Shower · Stage & Mandap Decor · DJ · Catering
+              </p>
+              <div className="pt-2 flex justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={onOpenContactModal}
+                  className="bg-[#E91E63] hover:bg-[#D81B60] text-white text-xs font-bold px-4 py-2 rounded-xl shadow-md transition-transform active:scale-95"
+                >
+                  Contact Kishore
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

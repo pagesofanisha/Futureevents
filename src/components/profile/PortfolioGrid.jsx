@@ -16,13 +16,15 @@ export default function PortfolioGrid({ onOpenLightbox }) {
   // Active Tab: "portfolio" | "albums" | "videos"
   const [activeTab, setActiveTab] = useState("portfolio");
 
-  // Flatten all photos for the main Portfolio grid
+  // Flatten all photos for the main Portfolio grid (excluding unsplash placeholders)
   const allPhotos = albums.flatMap((album) =>
-    (album.photos || []).map((p) => ({
-      ...p,
-      albumName: album.name,
-      albumId: album.id,
-    }))
+    (album.photos || [])
+      .filter((p) => p.url && !p.url.includes("unsplash.com"))
+      .map((p) => ({
+        ...p,
+        albumName: album.name,
+        albumId: album.id,
+      }))
   );
 
   // Initial images count from settings (default 8, configurable 5-10)
@@ -95,45 +97,53 @@ export default function PortfolioGrid({ onOpenLightbox }) {
         {/* Tab 1: Pinterest-Style Portfolio Photo Grid */}
         {activeTab === "portfolio" && (
           <div>
-            <div className="masonry-grid">
-              {displayedPhotos.map((photo, idx) => {
-                const ratioClass = aspectHeights[idx % aspectHeights.length];
+            {displayedPhotos.length > 0 ? (
+              <div className="masonry-grid">
+                {displayedPhotos.map((photo, idx) => {
+                  const ratioClass = aspectHeights[idx % aspectHeights.length];
 
-                return (
-                  <div
-                    key={photo.id || idx}
-                    onClick={() => onOpenLightbox(allPhotos, idx)}
-                    className="masonry-item group relative rounded-xl overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-all duration-300"
-                  >
-                    <div className={`w-full ${ratioClass} bg-zinc-800 overflow-hidden`}>
-                      <img
-                        src={photo.url}
-                        alt={photo.caption || "Future Events Stage Setup"}
-                        loading="lazy"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-                      />
-                    </div>
+                  return (
+                    <div
+                      key={photo.id || idx}
+                      onClick={() => onOpenLightbox(allPhotos, idx)}
+                      className="masonry-item group relative rounded-xl overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-all duration-300"
+                    >
+                      <div className={`w-full ${ratioClass} bg-zinc-800 overflow-hidden`}>
+                        <img
+                          src={photo.url}
+                          alt={photo.caption || "Future Events Stage Setup"}
+                          loading="lazy"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                        />
+                      </div>
 
-                    {/* Hover Overlay with Caption & Zoom Icon */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-between p-3.5 text-white">
-                      <div className="self-end bg-black/40 backdrop-blur-md p-1.5 rounded-full">
-                        <Maximize2 className="w-4 h-4 text-white" />
-                      </div>
-                      <div>
-                        {photo.caption && (
-                          <p className="text-xs font-medium leading-snug line-clamp-2">
-                            {photo.caption}
-                          </p>
-                        )}
-                        <span className="text-[10px] text-pink-300 mt-1 block">
-                          Album: {photo.albumName}
-                        </span>
+                      {/* Hover Overlay with Caption & Zoom Icon */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-between p-3.5 text-white">
+                        <div className="self-end bg-black/40 backdrop-blur-md p-1.5 rounded-full">
+                          <Maximize2 className="w-4 h-4 text-white" />
+                        </div>
+                        <div>
+                          {photo.caption && (
+                            <p className="text-xs font-medium leading-snug line-clamp-2">
+                              {photo.caption}
+                            </p>
+                          )}
+                          <span className="text-[10px] text-pink-300 mt-1 block">
+                            Album: {photo.albumName}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="py-12 text-center text-gray-400">
+                <ImageIcon className="w-10 h-10 mx-auto mb-2 opacity-40 text-[#E91E63]" />
+                <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">No photos in portfolio yet</p>
+                <p className="text-xs text-gray-500 mt-1">Upload event photos to your albums in the admin dashboard.</p>
+              </div>
+            )}
 
             {/* "View More" Button (pink) */}
             {hasMore && (
@@ -154,13 +164,11 @@ export default function PortfolioGrid({ onOpenLightbox }) {
         {activeTab === "albums" && (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {albums.map((album) => {
-              const photoCount = album.photos?.length || album.photoCount || 0;
+              const photoCount = (album.photos || []).filter(p => p.url && !p.url.includes("unsplash.com")).length || album.photoCount || 0;
               const thumb =
                 album.thumbnail && !album.thumbnail.includes("unsplash.com")
                   ? album.thumbnail
-                  : album.photos?.[0]?.url ||
-                    album.thumbnail ||
-                    "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=600&q=80";
+                  : album.photos?.[0]?.url || "";
 
               return (
                 <div
@@ -169,12 +177,19 @@ export default function PortfolioGrid({ onOpenLightbox }) {
                   className="group cursor-pointer rounded-2xl overflow-hidden border border-gray-200 dark:border-zinc-800 hover:shadow-xl transition-all transform hover:-translate-y-1 bg-white dark:bg-zinc-800/80"
                 >
                   <div className="relative aspect-video w-full bg-zinc-800 overflow-hidden">
-                    <img
-                      src={thumb}
-                      alt={album.name}
-                      loading="lazy"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
+                    {thumb && !thumb.includes("unsplash.com") ? (
+                      <img
+                        src={thumb}
+                        alt={album.name}
+                        loading="lazy"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center bg-gradient-to-tr from-pink-950/40 via-zinc-900 to-zinc-900">
+                        <FolderOpen className="w-8 h-8 text-[#E91E63] opacity-60 mb-1" />
+                        <span className="text-xs text-gray-400 font-semibold">{album.category || "Album Collection"}</span>
+                      </div>
+                    )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-80" />
                     <span className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-md text-white text-xs font-bold px-2 py-0.5 rounded-full">
                       {photoCount} Photos

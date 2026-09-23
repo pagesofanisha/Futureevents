@@ -14,7 +14,7 @@ export default function VendorsSection({ onOpenContactModal }) {
           name: "Cinematic & Candid Wedding Coverage",
           description: "Traditional photography, candid wedding film, 4K drone shoots, pre-wedding & post-wedding shoots.",
           priceStarting: "₹ 45,000",
-          image: "https://images.unsplash.com/photo-1606800052052-a08af7148866?auto=format&fit=crop&w=600&q=80"
+          image: ""
         },
         {
           id: "v-dj",
@@ -22,7 +22,7 @@ export default function VendorsSection({ onOpenContactModal }) {
           name: "Club DJ, Concert Sound & Truss Lighting",
           description: "High-power sound systems, live DJ mixing for Sangeet & Reception, beam lights, and cold spark pyros.",
           priceStarting: "₹ 25,000",
-          image: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=600&q=80"
+          image: ""
         },
         {
           id: "v-decor",
@@ -30,7 +30,7 @@ export default function VendorsSection({ onOpenContactModal }) {
           name: "Bespoke Royal Mandap & Florals",
           description: "Custom floral mandaps, grand reception backdrops, floral pathway arches, neon signs, and fairy lighting.",
           priceStarting: "₹ 60,000",
-          image: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=600&q=80"
+          image: ""
         },
         {
           id: "v-catering",
@@ -38,7 +38,7 @@ export default function VendorsSection({ onOpenContactModal }) {
           name: "Authentic South Indian & Multi-Cuisine Feasts",
           description: "Traditional banana leaf feast, live chaat stalls, mocktail counters, desserts, and royal wedding buffet.",
           priceStarting: "₹ 450 / plate",
-          image: "https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&w=600&q=80"
+          image: ""
         },
         {
           id: "v-makeup",
@@ -46,17 +46,17 @@ export default function VendorsSection({ onOpenContactModal }) {
           name: "Bridal HD Artistry & Styling",
           description: "HD bridal makeup, hair styling, saree draping, mehendi artists, and groom grooming.",
           priceStarting: "₹ 15,000",
-          image: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=600&q=80"
+          image: ""
         }
       ];
 
   const getCategoryIcon = (category) => {
     const cat = (category || "").toLowerCase();
-    if (cat.includes("photo") || cat.includes("video")) return <Camera className="w-4 h-4 text-[#E91E63]" />;
-    if (cat.includes("dj") || cat.includes("sound") || cat.includes("music")) return <Music className="w-4 h-4 text-[#E91E63]" />;
-    if (cat.includes("food") || cat.includes("cater")) return <Utensils className="w-4 h-4 text-[#E91E63]" />;
-    if (cat.includes("makeup") || cat.includes("style")) return <Sparkles className="w-4 h-4 text-[#E91E63]" />;
-    return <HeartHandshake className="w-4 h-4 text-[#E91E63]" />;
+    if (cat.includes("photo") || cat.includes("video")) return <Camera className="w-5 h-5 text-[#E91E63]" />;
+    if (cat.includes("dj") || cat.includes("sound") || cat.includes("music")) return <Music className="w-5 h-5 text-[#E91E63]" />;
+    if (cat.includes("food") || cat.includes("cater")) return <Utensils className="w-5 h-5 text-[#E91E63]" />;
+    if (cat.includes("makeup") || cat.includes("style")) return <Sparkles className="w-5 h-5 text-[#E91E63]" />;
+    return <HeartHandshake className="w-5 h-5 text-[#E91E63]" />;
   };
 
   return (
@@ -91,15 +91,24 @@ export default function VendorsSection({ onOpenContactModal }) {
               className="group bg-gray-50/60 dark:bg-zinc-800/40 rounded-xl overflow-hidden border border-gray-200 dark:border-zinc-800 hover:border-pink-300 dark:hover:border-pink-900 transition-all hover:shadow-md flex flex-col justify-between"
             >
               <div>
-                {/* Image */}
-                <div className="relative aspect-[16/10] overflow-hidden bg-zinc-800">
-                  <img
-                    src={vendor.image || "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=600&q=80"}
-                    alt={vendor.name}
-                    loading="lazy"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                {/* Image or Category Banner */}
+                <div className="relative aspect-[16/10] overflow-hidden bg-gradient-to-tr from-zinc-900 via-zinc-850 to-zinc-900 flex items-center justify-center">
+                  {vendor.image && !vendor.image.includes("unsplash.com") ? (
+                    <img
+                      src={vendor.image}
+                      alt={vendor.name}
+                      loading="lazy"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center text-center p-4 bg-gradient-to-tr from-pink-950/30 via-zinc-900 to-zinc-900">
+                      <div className="w-12 h-12 rounded-xl bg-[#E91E63]/20 text-[#E91E63] flex items-center justify-center mb-2">
+                        {getCategoryIcon(vendor.category)}
+                      </div>
+                      <span className="text-xs font-bold text-gray-200">{vendor.category}</span>
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
                   <span className="absolute bottom-2.5 left-3 text-xs font-bold text-white flex items-center space-x-1.5 drop-shadow">
                     {getCategoryIcon(vendor.category)}
                     <span>{vendor.category}</span>

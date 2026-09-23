@@ -193,7 +193,10 @@ export default function AlbumDetailPage() {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5">
               {otherAlbums.map((other) => {
                 const photoCount = other.photos?.length || other.photoCount || 0;
-                const thumb = other.thumbnail || other.photos?.[0]?.url || "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=400&q=80";
+                const thumb =
+                  other.thumbnail && !other.thumbnail.includes("unsplash.com")
+                    ? other.thumbnail
+                    : other.photos?.[0]?.url || "";
 
                 return (
                   <div
@@ -202,12 +205,21 @@ export default function AlbumDetailPage() {
                     className="group cursor-pointer rounded-xl overflow-hidden border border-gray-100 dark:border-zinc-800 hover:shadow-lg transition-all transform hover:-translate-y-1 bg-white dark:bg-zinc-800/80"
                   >
                     <div className="relative aspect-square w-full bg-zinc-800 overflow-hidden">
-                      <img
-                        src={thumb}
-                        alt={other.name}
-                        loading="lazy"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
+                      {thumb && !thumb.includes("unsplash.com") ? (
+                        <img
+                          src={thumb}
+                          alt={other.name}
+                          loading="lazy"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center p-3 text-center bg-gradient-to-tr from-pink-950/40 via-zinc-900 to-zinc-900">
+                          <ImageIcon className="w-6 h-6 text-[#E91E63] opacity-60 mb-1" />
+                          <span className="text-[10px] text-gray-400 font-semibold truncate max-w-full px-1">
+                            {other.category || "Album"}
+                          </span>
+                        </div>
+                      )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-80" />
                       <span className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center space-x-1">
                         <ImageIcon className="w-3 h-3" />

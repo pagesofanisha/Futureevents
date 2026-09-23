@@ -28,10 +28,61 @@ import {
 const DataContext = createContext();
 
 export function DataProvider({ children }) {
-  const [businessData, setBusinessData] = useState(initialBusinessData);
-  const [contactData, setContactData] = useState(initialContactData);
-  const [albums, setAlbums] = useState(initialAlbumsData);
-  const [reviews, setReviews] = useState(initialReviewsData);
+  const [businessData, setBusinessData] = useState(() => {
+    try {
+      const saved = localStorage.getItem("future_events_business_data");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.profileImage && parsed.profileImage.includes("unsplash.com")) {
+          parsed.profileImage = "";
+        }
+        return parsed;
+      }
+    } catch {}
+    return initialBusinessData;
+  });
+
+  const [contactData, setContactData] = useState(() => {
+    try {
+      const saved = localStorage.getItem("future_events_contact_data");
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return initialContactData;
+  });
+
+  const [albums, setAlbums] = useState(() => {
+    try {
+      const saved = localStorage.getItem("future_events_albums");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return parsed.map(a => ({
+            ...a,
+            photos: (a.photos || []).filter(p => p.url && !p.url.includes("unsplash.com")),
+            thumbnail: (a.thumbnail && !a.thumbnail.includes("unsplash.com")) ? a.thumbnail : ""
+          }));
+        }
+      }
+    } catch {}
+    return initialAlbumsData;
+  });
+
+  const [reviews, setReviews] = useState(() => {
+    try {
+      const saved = localStorage.getItem("future_events_reviews");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return parsed.map(r => ({
+            ...r,
+            photos: (r.photos || []).filter(p => typeof p === "string" ? !p.includes("unsplash.com") : !p.url?.includes("unsplash.com"))
+          }));
+        }
+      }
+    } catch {}
+    return initialReviewsData;
+  });
+
   const [settings, setSettings] = useState(initialSettingsData);
   const [isLoading, setIsLoading] = useState(true);
 
