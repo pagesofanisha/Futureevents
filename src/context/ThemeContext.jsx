@@ -7,7 +7,7 @@ export function ThemeProvider({ children }) {
     try {
       const saved = localStorage.getItem("future_events_theme");
       if (saved) return saved === "dark";
-      return window.matchMedia("(prefers-color-scheme: dark)").matches;
+      return false; // Default light mode for all users
     } catch {
       return false;
     }
