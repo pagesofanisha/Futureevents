@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 import {
   Search,
   MapPin,
@@ -8,9 +8,9 @@ import {
   Shield,
   Menu,
   X,
-  Sparkles,
   Edit3,
-  Smartphone
+  Smartphone,
+  MoreVertical
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 import { useAuth } from "../../context/AuthContext";
@@ -21,7 +21,21 @@ export default function Navbar() {
   const { isAdminLoggedIn } = useAuth();
   const { businessData } = useData();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [adminMenuOpen, setAdminMenuOpen] = useState(false);
   const [selectedCity, setSelectedCity] = useState("Chennai");
+
+  const menuRef = useRef(null);
+
+  // Close 3-dots menu on click outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setAdminMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const cities = ["Chennai", "Ramapuram", "Porur", "Coimbatore", "Madurai", "All Cities"];
 
@@ -74,7 +88,7 @@ export default function Navbar() {
                   <span className="text-[#E91E63] font-black text-lg sm:text-xl leading-none">∞</span>
                 </div>
                 <div className="min-w-0">
-                  <span className="text-sm sm:text-lg lg:text-xl font-bold tracking-tight block leading-tight text-white truncate max-w-[140px] xs:max-w-[180px] sm:max-w-none">
+                  <span className="text-sm sm:text-lg lg:text-xl font-bold tracking-tight block leading-tight text-white truncate max-w-[150px] xs:max-w-[190px] sm:max-w-none">
                     {businessData.businessName || "Future Event Organization"}
                   </span>
                   <span className="hidden sm:block text-[11px] font-normal tracking-wider uppercase text-pink-100 opacity-90 truncate">
@@ -84,20 +98,16 @@ export default function Navbar() {
               </Link>
             </div>
 
-            {/* Desktop Navigation Links */}
-            <nav className="hidden lg:flex items-center space-x-6 text-sm font-medium">
+            {/* Desktop Navigation Links (Genie completely removed) */}
+            <nav className="hidden lg:flex items-center space-x-7 text-sm font-medium">
               <a href="#projects-section" className="hover:text-pink-100 transition-colors">Portfolios</a>
               <a href="#albums-section" className="hover:text-pink-100 transition-colors">Albums</a>
               <a href="#about-section" className="hover:text-pink-100 transition-colors">About</a>
               <a href="#reviews-section" className="hover:text-pink-100 transition-colors">Reviews</a>
-              <span className="flex items-center space-x-1 bg-pink-700/60 hover:bg-pink-700 px-2.5 py-1 rounded-full text-xs font-semibold text-yellow-300">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Genie</span>
-              </span>
             </nav>
 
-            {/* Right Action Icons: Dark Mode & Admin Button */}
-            <div className="flex items-center space-x-1.5 sm:space-x-3 flex-shrink-0">
+            {/* Right Action Icons */}
+            <div className="flex items-center space-x-1.5 sm:space-x-2.5 flex-shrink-0">
               {/* Dark Mode Toggle */}
               <button
                 onClick={toggleTheme}
@@ -108,14 +118,30 @@ export default function Navbar() {
                 {isDarkMode ? <Sun className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-yellow-300" /> : <Moon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />}
               </button>
 
-              {/* Admin Portal Button */}
-              <Link
-                to={isAdminLoggedIn ? "/admin" : "/admin/login"}
-                className="flex items-center space-x-1 bg-white text-[#E91E63] hover:bg-pink-50 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold shadow-sm transition-all"
-              >
-                <Shield className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                <span>{isAdminLoggedIn ? "Admin" : "Login"}</span>
-              </Link>
+              {/* 3-Dots Menu Dropdown (Replaces direct Owner Login pill) */}
+              <div className="relative" ref={menuRef}>
+                <button
+                  onClick={() => setAdminMenuOpen(!adminMenuOpen)}
+                  className="p-1.5 sm:p-2 rounded-full bg-pink-700/50 hover:bg-pink-700 text-white transition-all focus:outline-none"
+                  title="More Options"
+                  aria-label="More Options"
+                >
+                  <MoreVertical className="w-4 h-4 text-white" />
+                </button>
+
+                {adminMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-44 bg-white dark:bg-zinc-900 rounded-xl shadow-xl border border-gray-100 dark:border-zinc-800 py-1.5 z-50 fade-in">
+                    <Link
+                      to={isAdminLoggedIn ? "/admin" : "/admin/login"}
+                      onClick={() => setAdminMenuOpen(false)}
+                      className="flex items-center space-x-2.5 px-4 py-2.5 text-xs font-bold text-gray-800 dark:text-gray-200 hover:bg-pink-50 dark:hover:bg-zinc-800 hover:text-[#E91E63] transition-colors"
+                    >
+                      <Shield className="w-4 h-4 text-[#E91E63]" />
+                      <span>Admin Portal</span>
+                    </Link>
+                  </div>
+                )}
+              </div>
 
               {/* Mobile menu button */}
               <button
@@ -161,8 +187,15 @@ export default function Navbar() {
               Customer Reviews (5.0 ★)
             </a>
             <div className="pt-2 border-t border-pink-400/30 flex justify-between items-center text-xs">
-              <span>Location: Ramapuram, Chennai</span>
-              <span className="font-semibold">+91 93604 55217</span>
+              <span>Ramapuram, Chennai</span>
+              <Link
+                to={isAdminLoggedIn ? "/admin" : "/admin/login"}
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-yellow-300 font-bold hover:underline flex items-center space-x-1"
+              >
+                <Shield className="w-3.5 h-3.5" />
+                <span>Admin Portal</span>
+              </Link>
             </div>
           </div>
         )}

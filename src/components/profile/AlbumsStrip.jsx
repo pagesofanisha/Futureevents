@@ -24,7 +24,7 @@ export default function AlbumsStrip() {
           </div>
 
           {/* Horizontal scrollable / grid album cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-3.5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
             {albums.map((album) => {
               const photoCount = album.photos?.length || album.photoCount || 0;
               const thumb = album.thumbnail || album.photos?.[0]?.url || "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=400&q=80";
@@ -60,32 +60,6 @@ export default function AlbumsStrip() {
               );
             })}
           </div>
-        </div>
-
-        {/* Right: Genie Concierge Promo Card (approx 30% matching WedMeGood) */}
-        <div className="w-full lg:w-80 bg-gradient-to-br from-pink-600 via-[#E91E63] to-rose-700 rounded-2xl p-6 text-white shadow-md flex flex-col justify-between relative overflow-hidden">
-          <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-xl pointer-events-none" />
-
-          <div>
-            <div className="inline-flex items-center space-x-1.5 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold mb-3">
-              <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
-              <span>WedMeGood Genie Concierge</span>
-            </div>
-            <h3 className="text-xl font-black leading-tight mb-2">
-              Planning your dream event made easy!
-            </h3>
-            <p className="text-xs text-pink-100 leading-relaxed mb-4">
-              Get Kishore's direct quotes for destination weddings, stage decors, floral mandaps, and catering packages.
-            </p>
-          </div>
-
-          <a
-            href="#inquiry-form"
-            className="w-full bg-white text-[#E91E63] hover:bg-pink-50 py-2.5 px-4 rounded-xl text-xs font-extrabold text-center shadow-lg transition-transform transform active:scale-95 flex items-center justify-center space-x-2"
-          >
-            <span>Meet Kishore & Team</span>
-            <ArrowRight className="w-4 h-4" />
-          </a>
         </div>
       </div>
     </section>

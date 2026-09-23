@@ -123,9 +123,6 @@ export default function AdminLoginPage() {
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-              <div className="flex justify-between items-center mt-1.5 text-[11px] text-gray-400">
-                <span>Default: <code className="bg-gray-100 dark:bg-zinc-800 px-1 py-0.5 rounded text-pink-600 dark:text-pink-400 font-mono">Futureeventskishore2026</code></span>
-              </div>
             </div>
 
             <button
