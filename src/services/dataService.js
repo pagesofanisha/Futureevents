@@ -17,6 +17,7 @@ import {
   initialSettingsData,
   initialAuthData
 } from "../config/defaultData";
+import { idbGet, idbSet } from "./dbStorage";
 
 const STORAGE_KEYS = {
   BUSINESS: "future_events_business_data",
@@ -42,10 +43,12 @@ function getLocalItem(key, fallback) {
 function setLocalItem(key, value) {
   try {
     localStorage.setItem(key, JSON.stringify(value));
-    window.dispatchEvent(new CustomEvent("future_events_data_change", { detail: { key, value } }));
   } catch (err) {
-    console.error("Local storage write error:", err);
+    console.warn("LocalStorage quota reached, falling back to IndexedDB for large media:", err.message);
   }
+  // Also always persist to IndexedDB asynchronously for high-capacity photo storage
+  idbSet(key, value);
+  window.dispatchEvent(new CustomEvent("future_events_data_change", { detail: { key, value } }));
 }
 
 // Helper: Timeout for Firestore reads to avoid hanging on unprovisioned databases
@@ -76,18 +79,48 @@ function safeFirestoreSync(fn) {
 // BUSINESS INFO
 // -------------------------------------------------------------
 export async function getBusinessInfo() {
+  let biz = null;
   if (isFirebaseConfigured && db) {
     try {
       const docRef = doc(db, "businesses", "future_events_chennai");
       const docSnap = await withTimeout(getDoc(docRef), 800);
-      if (docSnap && docSnap.exists()) return docSnap.data();
+      if (docSnap && docSnap.exists()) biz = docSnap.data();
     } catch (err) {
       // Quiet fallback to persistent local cache
     }
   }
-  const biz = getLocalItem(STORAGE_KEYS.BUSINESS, initialBusinessData);
-  if (biz && biz.teamMembers && biz.teamMembers.length > 1) {
+  if (!biz) {
+    biz = getLocalItem(STORAGE_KEYS.BUSINESS, initialBusinessData);
+  }
+
+  let hasChanged = false;
+  // Auto-migrate old ₹ 50,000 to ₹ 99,000
+  if (!biz.priceStarting || biz.priceStarting === "₹ 50,000") {
+    biz.priceStarting = "₹ 99,000";
+    hasChanged = true;
+  }
+  if (biz.feeStructure && biz.feeStructure.includes("50,000")) {
+    biz.feeStructure = biz.feeStructure.replace(/50,000/g, "99,000");
+    hasChanged = true;
+  }
+  if (!biz.vendors || !Array.isArray(biz.vendors) || biz.vendors.length === 0) {
+    biz.vendors = initialBusinessData.vendors;
+    hasChanged = true;
+  }
+  if (!biz.specialists || !Array.isArray(biz.specialists) || biz.specialists.length === 0) {
+    biz.specialists = initialBusinessData.specialists;
+    hasChanged = true;
+  }
+  if (biz.logoUrl === undefined) {
+    biz.logoUrl = "";
+    hasChanged = true;
+  }
+  if (biz.teamMembers && biz.teamMembers.length > 1) {
     biz.teamMembers = ["Kishore (Founder & Lead Planner)"];
+    hasChanged = true;
+  }
+
+  if (hasChanged) {
     setLocalItem(STORAGE_KEYS.BUSINESS, biz);
   }
   return biz;
@@ -148,7 +181,21 @@ export async function getAlbums() {
       // Fallback
     }
   }
-  return getLocalItem(STORAGE_KEYS.ALBUMS, initialAlbumsData);
+
+  // Check localStorage first
+  let albums = getLocalItem(STORAGE_KEYS.ALBUMS, null);
+  if (!albums || !Array.isArray(albums) || albums.length === 0) {
+    // Check IndexedDB
+    try {
+      const idbAlbums = await idbGet(STORAGE_KEYS.ALBUMS);
+      if (idbAlbums && Array.isArray(idbAlbums) && idbAlbums.length > 0) {
+        albums = idbAlbums;
+        try { localStorage.setItem(STORAGE_KEYS.ALBUMS, JSON.stringify(albums)); } catch {}
+      }
+    } catch {}
+  }
+
+  return albums || initialAlbumsData;
 }
 
 export async function createAlbum(albumData) {

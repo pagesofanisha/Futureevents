@@ -87,7 +87,7 @@ export default function InquiryCard({ onOpenContactModal }) {
           </span>
           <div className="flex items-baseline space-x-1.5 mt-0.5">
             <span className="text-2xl font-black text-[#E91E63] dark:text-pink-400">
-              {businessData.priceStarting || "₹ 50,000"}
+              {businessData.priceStarting || "₹ 99,000"}
             </span>
             <span className="text-xs text-gray-500 dark:text-gray-400">
               (Planning Fee)

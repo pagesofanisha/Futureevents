@@ -38,7 +38,7 @@ export default function AboutSection() {
         </p>
 
         {/* Services Provided List */}
-        <div className="mb-8">
+        <div className="mb-6">
           <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3">
             Services Provided by {businessData.businessName}
           </h3>
@@ -50,6 +50,30 @@ export default function AboutSection() {
               >
                 <CheckCircle className="w-4 h-4 text-[#E91E63] flex-shrink-0 mt-0.5" />
                 <span>{srv}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Specialist Contents & Creative Expertise */}
+        <div className="mb-8">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-[#E91E63] mb-3">
+            Kishore's Specialist Capabilities & Creative Expertise
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {(businessData.specialists && businessData.specialists.length > 0
+              ? businessData.specialists
+              : [
+                  { title: "Luxury Mandap & Stage Decor", desc: "Signature South Indian floral backdrops, fiber carvings, brass props, and atmospheric fairy lights." },
+                  { title: "Full Wedding & Reception Coordination", desc: "End-to-end planning from muhurtham timing, guest hospitality, vendor coordination to farewell." },
+                  { title: "Sangeet, DJ & Concert Sound Systems", desc: "High-octane sound setups, club-style truss moving heads, and live music direction." },
+                  { title: "Authentic Valaikappu & Traditional Feasts", desc: "Exquisite 7-variety rice preparations, banana leaf dining, sweet stalls, and traditional seating." },
+                  { title: "Cinematic Photography & Drone Coverage", desc: "Capturing candid emotions, 4K wedding films, teasers, and high-resolution heirloom albums." }
+                ]
+            ).map((sp, sIdx) => (
+              <div key={sIdx} className="p-3.5 rounded-xl bg-gray-50/80 dark:bg-zinc-800/40 border border-gray-100 dark:border-zinc-800 space-y-1">
+                <span className="text-xs font-bold text-gray-900 dark:text-white block">{sp.title}</span>
+                <p className="text-[11px] text-gray-600 dark:text-gray-400 leading-relaxed">{sp.desc}</p>
               </div>
             ))}
           </div>
@@ -76,7 +100,7 @@ export default function AboutSection() {
               Fee Structure
             </span>
             <p className="font-medium text-gray-900 dark:text-white leading-snug">
-              {businessData.feeStructure || "Starts from ₹ 50,000"}
+              {businessData.feeStructure || "Starts from ₹ 99,000"}
             </p>
           </div>
 

@@ -39,6 +39,11 @@ export default function GalleryManager() {
   const [uploadMessage, setUploadMessage] = useState("");
   const [isDragOver, setIsDragOver] = useState(false);
 
+  // Direct Image URL State
+  const [photoUrlInput, setPhotoUrlInput] = useState("");
+  const [photoCaptionInput, setPhotoCaptionInput] = useState("");
+  const [isAddingUrl, setIsAddingUrl] = useState(false);
+
   const currentAlbum = albums.find((a) => a.id === selectedAlbumId) || albums[0];
 
   // 1. Create Album
@@ -80,7 +85,7 @@ export default function GalleryManager() {
     }
   };
 
-  // 4. Multi-file Photo Upload with Compression & Progress
+  // 4. Multi-file Photo Upload with Instant Compression & Progress
   const handleUploadFiles = async (files) => {
     if (!currentAlbum) {
       alert("Please select or create an album first.");
@@ -90,13 +95,14 @@ export default function GalleryManager() {
     if (!fileList.length) return;
 
     setIsUploading(true);
-    setUploadProgress(0);
-    setUploadMessage(`Compressing & uploading ${fileList.length} photos...`);
+    setUploadProgress(10);
+    setUploadMessage(`Preparing ${fileList.length} photo${fileList.length > 1 ? "s" : ""}...`);
 
     let completed = 0;
     try {
       for (const file of fileList) {
-        const storagePath = `businesses/future_events_chennai/albums/${currentAlbum.id}/${Date.now()}-${file.name}`;
+        setUploadMessage(`Compressing & saving photo ${completed + 1} of ${fileList.length}...`);
+        const storagePath = `businesses/future_events_chennai/albums/${currentAlbum.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
         const downloadUrl = await uploadImageFile(file, storagePath, (pct) => {
           const stepTotal = ((completed + pct / 100) / fileList.length) * 100;
           setUploadProgress(Math.round(stepTotal));
@@ -109,15 +115,39 @@ export default function GalleryManager() {
 
         completed++;
       }
-      setUploadMessage("All photos uploaded & compressed successfully!");
+      setUploadProgress(100);
+      setUploadMessage(`${completed} photo${completed > 1 ? "s" : ""} added to album successfully!`);
       setTimeout(() => {
         setIsUploading(false);
         setUploadProgress(0);
         setUploadMessage("");
-      }, 2500);
+      }, 2000);
     } catch (err) {
       alert("Upload failed: " + err.message);
       setIsUploading(false);
+    }
+  };
+
+  // 4b. Add Photo via URL
+  const handleAddPhotoUrl = async (e) => {
+    e.preventDefault();
+    if (!photoUrlInput.trim()) return;
+    if (!currentAlbum) {
+      alert("Please select or create an album first.");
+      return;
+    }
+    setIsAddingUrl(true);
+    try {
+      await addPhotoToAlbum(currentAlbum.id, {
+        url: photoUrlInput.trim(),
+        caption: photoCaptionInput.trim() || `${currentAlbum.name} - Photo ${Date.now().toString().slice(-4)}`
+      });
+      setPhotoUrlInput("");
+      setPhotoCaptionInput("");
+    } catch (err) {
+      alert("Failed to add photo: " + err.message);
+    } finally {
+      setIsAddingUrl(false);
     }
   };
 
@@ -406,6 +436,37 @@ export default function GalleryManager() {
                     </div>
                   </div>
                 )}
+              </div>
+
+              {/* Alternative: Add Photo by Direct Image URL */}
+              <div className="bg-gray-50/70 dark:bg-zinc-800/40 p-3.5 rounded-xl border border-gray-200 dark:border-zinc-800 text-xs">
+                <form onSubmit={handleAddPhotoUrl} className="flex flex-col sm:flex-row gap-2 items-center">
+                  <div className="flex-1 w-full">
+                    <input
+                      type="url"
+                      value={photoUrlInput}
+                      onChange={(e) => setPhotoUrlInput(e.target.value)}
+                      placeholder="Or paste any direct Image URL (e.g. https://...)"
+                      className="w-full px-3 py-1.5 rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-900 dark:text-white focus:outline-none focus:border-[#E91E63]"
+                    />
+                  </div>
+                  <div className="w-full sm:w-48">
+                    <input
+                      type="text"
+                      value={photoCaptionInput}
+                      onChange={(e) => setPhotoCaptionInput(e.target.value)}
+                      placeholder="Photo caption (optional)"
+                      className="w-full px-3 py-1.5 rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-900 dark:text-white focus:outline-none focus:border-[#E91E63]"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={isAddingUrl || !photoUrlInput.trim()}
+                    className="w-full sm:w-auto bg-gray-900 dark:bg-zinc-700 hover:bg-[#E91E63] text-white px-4 py-1.5 rounded-lg font-semibold transition-colors disabled:opacity-50 whitespace-nowrap"
+                  >
+                    {isAddingUrl ? "Adding..." : "Add via URL"}
+                  </button>
+                </form>
               </div>
 
               {/* Photos List Grid */}

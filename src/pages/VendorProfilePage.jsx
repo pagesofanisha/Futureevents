@@ -9,6 +9,8 @@ import PortfolioGrid from "../components/profile/PortfolioGrid";
 import SimilarVendors from "../components/profile/SimilarVendors";
 import AboutSection from "../components/profile/AboutSection";
 import ReviewsSection from "../components/profile/ReviewsSection";
+import VendorsSection from "../components/profile/VendorsSection";
+import ExperienceSection from "../components/profile/ExperienceSection";
 import Footer from "../components/common/Footer";
 import LightboxModal from "../components/common/LightboxModal";
 import ContactModal from "../components/common/ContactModal";
@@ -90,10 +92,16 @@ export default function VendorProfilePage() {
           </div>
         </div>
 
-        {/* 7. About Section: Kishore description, planning since 2018, policies, FAQ accordion */}
+        {/* 7. Vendors Section: Photography, DJ, Decor, Catering, Makeup */}
+        <VendorsSection onOpenContactModal={() => setIsContactModalOpen(true)} />
+
+        {/* 8. Experience Section: 6+ Years, 500+ Events, Multi-City */}
+        <ExperienceSection />
+
+        {/* 9. About Section: Kishore description, planning since 2018, policies, FAQ accordion */}
         <AboutSection />
 
-        {/* 8. Reviews Section: Rating distribution, review submission, testimonials */}
+        {/* 10. Reviews Section: Rating distribution, review submission, testimonials */}
         <ReviewsSection onOpenLightbox={handleOpenLightbox} />
       </main>
 

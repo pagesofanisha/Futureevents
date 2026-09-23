@@ -8,8 +8,9 @@ export const initialBusinessData = {
   category: "Event Planner & Wedding Decorator",
   rating: 5.0,
   reviewCount: 12,
-  priceStarting: "₹ 50,000",
+  priceStarting: "₹ 99,000",
   priceUnit: "Starting Price (Planning Fee)",
+  logoUrl: "",
   profileImage: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80",
   description: "Based in Ramapuram, Chennai, Future Event Organization is a premier complete event planning and decor company led by Kishore. We specialize in curating breathtaking weddings, engagements, traditional baby showers (valaikappu), birthday celebrations, catering, and bespoke stage decors. With an eye for creative elegance and flawless execution, our dedicated team ensures your special celebrations become cherished lifelong memories.",
   yearsOfExperience: 6,
@@ -25,9 +26,73 @@ export const initialBusinessData = {
     "Music, DJ, Sound & Lighting Setup",
     "Floral Garlands & Bridal Entry Concepts"
   ],
+  specialists: [
+    {
+      title: "Luxury Mandap & Stage Decor",
+      desc: "Signature South Indian floral backdrops, fiber carvings, brass props, and atmospheric fairy lights."
+    },
+    {
+      title: "Full Wedding & Reception Coordination",
+      desc: "End-to-end planning from muhurtham timing, guest hospitality, vendor coordination to farewell."
+    },
+    {
+      title: "Sangeet, DJ & Concert Sound Systems",
+      desc: "High-octane sound setups, club-style truss moving heads, and live music direction."
+    },
+    {
+      title: "Authentic Valaikappu & Traditional Feasts",
+      desc: "Exquisite 7-variety rice preparations, banana leaf dining, sweet stalls, and traditional seating."
+    },
+    {
+      title: "Cinematic Photography & Drone Coverage",
+      desc: "Capturing candid emotions, 4K wedding films, teasers, and high-resolution heirloom albums."
+    }
+  ],
+  vendors: [
+    {
+      id: "v-photo",
+      category: "Photography & Videography",
+      name: "Cinematic & Candid Wedding Coverage",
+      description: "Traditional photography, candid wedding film, 4K drone shoots, pre-wedding & post-wedding shoots.",
+      priceStarting: "₹ 45,000",
+      image: "https://images.unsplash.com/photo-1606800052052-a08af7148866?auto=format&fit=crop&w=600&q=80"
+    },
+    {
+      id: "v-dj",
+      category: "DJ, Music & Sound",
+      name: "Club DJ, Concert Sound & Truss Lighting",
+      description: "High-power sound systems, live DJ mixing for Sangeet & Reception, beam lights, and cold spark pyros.",
+      priceStarting: "₹ 25,000",
+      image: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=600&q=80"
+    },
+    {
+      id: "v-decor",
+      category: "Stage & Mandap Decor",
+      name: "Bespoke Royal Mandap & Florals",
+      description: "Custom floral mandaps, grand reception backdrops, floral pathway arches, neon signs, and fairy lighting.",
+      priceStarting: "₹ 60,000",
+      image: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=600&q=80"
+    },
+    {
+      id: "v-catering",
+      category: "Food & Catering",
+      name: "Authentic South Indian & Multi-Cuisine Feasts",
+      description: "Traditional banana leaf feast, live chaat stalls, mocktail counters, desserts, and royal wedding buffet.",
+      priceStarting: "₹ 450 / plate",
+      image: "https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&w=600&q=80"
+    },
+    {
+      id: "v-makeup",
+      category: "Bridal Makeup & Styling",
+      name: "Bridal HD Artistry & Styling",
+      description: "HD bridal makeup, hair styling, saree draping, mehendi artists, and groom grooming.",
+      priceStarting: "₹ 15,000",
+      image: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=600&q=80"
+    }
+  ],
   decorPolicy: "Work with in-house & outside decorators tailored to client venue preferences",
   cancellationPolicy: "Advance booking amount can be adjusted towards future dates or rescheduled events with mutual coordination. Transparent terms with zero hidden fees.",
-  feeStructure: "Flexible planning fee starting from ₹ 50,000 or customized percentage of event budget based on scope",
+  feeStructure: "Flexible planning fee starting from ₹ 99,000 or customized percentage of event budget based on scope",
   serviceAreas: [
     "Chennai",
     "Ramapuram",
@@ -50,7 +115,7 @@ export const initialBusinessData = {
   faqs: [
     {
       q: "How does Future Event Organization charge for events and weddings planned by them?",
-      a: "We offer transparent fee structures starting from ₹ 50,000 for event management or customized percentage-based planning depending on your guest count, venue, and decor requirements."
+      a: "We offer transparent fee structures starting from ₹ 99,000 for event management or customized percentage-based planning depending on your guest count, venue, and decor requirements."
     },
     {
       q: "How is Future Event Organization's style different from other wedding planners in Chennai?",

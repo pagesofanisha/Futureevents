@@ -84,8 +84,16 @@ export default function Navbar() {
             {/* Logo / Brand Name */}
             <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
               <Link to="/" className="flex items-center space-x-2 group min-w-0">
-                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white flex items-center justify-center shadow-md flex-shrink-0">
-                  <span className="text-[#E91E63] font-black text-lg sm:text-xl leading-none">∞</span>
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white overflow-hidden flex items-center justify-center shadow-md flex-shrink-0 border border-white/40">
+                  {businessData.logoUrl ? (
+                    <img
+                      src={businessData.logoUrl}
+                      alt="Logo"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-[#E91E63] font-black text-lg sm:text-xl leading-none">∞</span>
+                  )}
                 </div>
                 <div className="min-w-0">
                   <span className="text-sm sm:text-lg lg:text-xl font-bold tracking-tight block leading-tight text-white truncate max-w-[150px] xs:max-w-[190px] sm:max-w-none">
@@ -98,10 +106,12 @@ export default function Navbar() {
               </Link>
             </div>
 
-            {/* Desktop Navigation Links (Genie completely removed) */}
-            <nav className="hidden lg:flex items-center space-x-7 text-sm font-medium">
+            {/* Desktop Navigation Links */}
+            <nav className="hidden lg:flex items-center space-x-6 text-sm font-medium">
               <a href="#projects-section" className="hover:text-pink-100 transition-colors">Portfolios</a>
               <a href="#albums-section" className="hover:text-pink-100 transition-colors">Albums</a>
+              <a href="#vendors-section" className="hover:text-pink-100 transition-colors">Vendors</a>
+              <a href="#experience-section" className="hover:text-pink-100 transition-colors">Experience</a>
               <a href="#about-section" className="hover:text-pink-100 transition-colors">About</a>
               <a href="#reviews-section" className="hover:text-pink-100 transition-colors">Reviews</a>
             </nav>
@@ -171,6 +181,20 @@ export default function Navbar() {
               className="block px-3 py-2 rounded-md text-sm font-medium hover:bg-pink-700"
             >
               Albums
+            </a>
+            <a
+              href="#vendors-section"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block px-3 py-2 rounded-md text-sm font-medium hover:bg-pink-700"
+            >
+              Vendors (Photography, DJ, Decor, Catering)
+            </a>
+            <a
+              href="#experience-section"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block px-3 py-2 rounded-md text-sm font-medium hover:bg-pink-700"
+            >
+              Experience (Since 2018)
             </a>
             <a
               href="#about-section"

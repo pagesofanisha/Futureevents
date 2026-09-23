@@ -46,22 +46,34 @@ export default function StickySubNav({ onOpenContactModal }) {
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-11 sm:h-14">
           {/* Navigation Anchors */}
-          <div className="flex items-center space-x-4 sm:space-x-8 text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300">
+          <div className="flex items-center space-x-3 sm:space-x-6 text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 overflow-x-auto no-scrollbar py-1">
             <a
               href="#projects-section"
-              className="py-2.5 sm:py-4 border-b-2 border-transparent hover:border-[#E91E63] hover:text-[#E91E63] dark:hover:text-[#E91E63] transition-colors"
+              className="py-2.5 sm:py-4 border-b-2 border-transparent hover:border-[#E91E63] hover:text-[#E91E63] dark:hover:text-[#E91E63] transition-colors whitespace-nowrap"
             >
               Projects
             </a>
             <a
+              href="#vendors-section"
+              className="py-2.5 sm:py-4 border-b-2 border-transparent hover:border-[#E91E63] hover:text-[#E91E63] dark:hover:text-[#E91E63] transition-colors whitespace-nowrap"
+            >
+              Vendors
+            </a>
+            <a
+              href="#experience-section"
+              className="py-2.5 sm:py-4 border-b-2 border-transparent hover:border-[#E91E63] hover:text-[#E91E63] dark:hover:text-[#E91E63] transition-colors whitespace-nowrap"
+            >
+              Experience
+            </a>
+            <a
               href="#about-section"
-              className="py-2.5 sm:py-4 border-b-2 border-transparent hover:border-[#E91E63] hover:text-[#E91E63] dark:hover:text-[#E91E63] transition-colors"
+              className="py-2.5 sm:py-4 border-b-2 border-transparent hover:border-[#E91E63] hover:text-[#E91E63] dark:hover:text-[#E91E63] transition-colors whitespace-nowrap"
             >
               About
             </a>
             <a
               href="#reviews-section"
-              className="py-2.5 sm:py-4 border-b-2 border-transparent hover:border-[#E91E63] hover:text-[#E91E63] dark:hover:text-[#E91E63] transition-colors"
+              className="py-2.5 sm:py-4 border-b-2 border-transparent hover:border-[#E91E63] hover:text-[#E91E63] dark:hover:text-[#E91E63] transition-colors whitespace-nowrap"
             >
               Reviews ({businessData.reviewCount || 12})
             </a>
@@ -107,7 +119,7 @@ export default function StickySubNav({ onOpenContactModal }) {
             <div className="hidden md:flex flex-col text-right">
               <span className="text-[10px] text-gray-500 dark:text-gray-400">Starting Price</span>
               <span className="text-sm font-bold text-[#E91E63] dark:text-pink-400">
-                {businessData.priceStarting || "₹ 50,000"}
+                {businessData.priceStarting || "₹ 99,000"}
               </span>
             </div>
 

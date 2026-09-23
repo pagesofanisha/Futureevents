@@ -112,7 +112,7 @@ export default function AdminDashboardPage() {
                 <span className="font-bold text-gray-900 dark:text-white block">
                   {adminUser?.name || "Kishore"}
                 </span>
-                <span className="text-[10px] text-gray-400">Owner</span>
+                <span className="text-[10px] text-[#E91E63] font-semibold">Proprietorship under Kishore</span>
               </div>
             </div>
 
