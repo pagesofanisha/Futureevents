@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import { DataProvider } from "./context/DataContext";
 
 import VendorProfilePage from "./pages/VendorProfilePage";
+import AlbumDetailPage from "./pages/AlbumDetailPage";
 import AdminLoginPage from "./pages/AdminLoginPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 
@@ -26,7 +27,7 @@ export default function App() {
             <Routes>
               {/* Public Vendor Profile Page */}
               <Route path="/" element={<VendorProfilePage />} />
-              <Route path="/album/:albumId" element={<VendorProfilePage />} />
+              <Route path="/album/:albumId" element={<AlbumDetailPage />} />
 
               {/* Admin Login */}
               <Route path="/admin/login" element={<AdminLoginPage />} />

@@ -64,7 +64,12 @@ export async function getBusinessInfo() {
       console.warn("Firestore read failed, using local:", err);
     }
   }
-  return getLocalItem(STORAGE_KEYS.BUSINESS, initialBusinessData);
+  const biz = getLocalItem(STORAGE_KEYS.BUSINESS, initialBusinessData);
+  if (biz && biz.teamMembers && biz.teamMembers.length > 1) {
+    biz.teamMembers = ["Kishore (Founder & Lead Planner)"];
+    setLocalItem(STORAGE_KEYS.BUSINESS, biz);
+  }
+  return biz;
 }
 
 export async function updateBusinessInfo(data) {

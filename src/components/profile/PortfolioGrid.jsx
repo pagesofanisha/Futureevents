@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Image as ImageIcon,
   FolderOpen,
@@ -8,8 +9,9 @@ import {
 } from "lucide-react";
 import { useData } from "../../context/DataContext";
 
-export default function PortfolioGrid({ onOpenLightbox, onSelectAlbum }) {
+export default function PortfolioGrid({ onOpenLightbox }) {
   const { albums, settings } = useData();
+  const navigate = useNavigate();
 
   // Active Tab: "portfolio" | "albums" | "videos"
   const [activeTab, setActiveTab] = useState("portfolio");
@@ -158,7 +160,7 @@ export default function PortfolioGrid({ onOpenLightbox, onSelectAlbum }) {
               return (
                 <div
                   key={album.id}
-                  onClick={() => onSelectAlbum(album)}
+                  onClick={() => navigate(`/album/${album.id}`)}
                   className="group cursor-pointer rounded-2xl overflow-hidden border border-gray-200 dark:border-zinc-800 hover:shadow-xl transition-all transform hover:-translate-y-1 bg-white dark:bg-zinc-800/80"
                 >
                   <div className="relative aspect-video w-full bg-zinc-800 overflow-hidden">

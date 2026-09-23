@@ -40,10 +40,7 @@ export const initialBusinessData = {
     "Pondicherry"
   ],
   teamMembers: [
-    "Kishore (Founder & Lead Planner)",
-    "Dinesh (Decor & Technical Lead)",
-    "Priya (Client Coordination & Hospitality)",
-    "Senthil (Catering & Logistics)"
+    "Kishore (Founder & Lead Planner)"
   ],
   stats: {
     eventsCompleted: 180,

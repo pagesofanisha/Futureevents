@@ -25,13 +25,23 @@ export default function HeroSlideshow({ onOpenLightbox, onOpenContactModal }) {
   const totalImages = allPhotos.length;
   const currentPhoto = totalImages > 0 ? allPhotos[currentIndex] : null;
 
-  // STRICT REQUIREMENT: Manual click only, NO autoplay
-  const handlePrev = () => {
+  // Automatic Slideshow (auto-rotates every 3.5s, manual arrow buttons still available)
+  React.useEffect(() => {
+    if (totalImages <= 1) return;
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev === totalImages - 1 ? 0 : prev + 1));
+    }, 3500);
+    return () => clearInterval(timer);
+  }, [totalImages, currentIndex]);
+
+  const handlePrev = (e) => {
+    if (e) e.stopPropagation();
     if (totalImages === 0) return;
     setCurrentIndex(prev => (prev === 0 ? totalImages - 1 : prev - 1));
   };
 
-  const handleNext = () => {
+  const handleNext = (e) => {
+    if (e) e.stopPropagation();
     if (totalImages === 0) return;
     setCurrentIndex(prev => (prev === totalImages - 1 ? 0 : prev + 1));
   };

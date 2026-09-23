@@ -1,19 +1,20 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Sparkles, Image as ImageIcon, ArrowRight } from "lucide-react";
 import { useData } from "../../context/DataContext";
 
-export default function AlbumsStrip({ onSelectAlbum }) {
+export default function AlbumsStrip() {
   const { albums } = useData();
+  const navigate = useNavigate();
 
   return (
-    <section id="albums-section" className="py-6">
+    <section id="albums-section" className="py-4 sm:py-6">
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Left: Albums Strip (approx 70%) */}
-        <div className="flex-1 bg-white dark:bg-zinc-900 rounded-2xl p-5 sm:p-6 shadow-sm border border-gray-100 dark:border-zinc-800 transition-colors">
+        <div className="flex-1 bg-white dark:bg-zinc-900 rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-zinc-800 transition-colors">
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
+              <h2 className="text-sm sm:text-lg font-bold text-gray-900 dark:text-white">
                 Albums Uploaded from: Chennai ({albums.length})
               </h2>
               <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -23,7 +24,7 @@ export default function AlbumsStrip({ onSelectAlbum }) {
           </div>
 
           {/* Horizontal scrollable / grid album cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-3.5">
             {albums.map((album) => {
               const photoCount = album.photos?.length || album.photoCount || 0;
               const thumb = album.thumbnail || album.photos?.[0]?.url || "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=400&q=80";
@@ -31,7 +32,7 @@ export default function AlbumsStrip({ onSelectAlbum }) {
               return (
                 <div
                   key={album.id}
-                  onClick={() => onSelectAlbum(album)}
+                  onClick={() => navigate(`/album/${album.id}`)}
                   className="group cursor-pointer flex flex-col rounded-xl overflow-hidden border border-gray-100 dark:border-zinc-800 hover:shadow-md transition-all transform hover:-translate-y-0.5"
                 >
                   <div className="relative aspect-square w-full bg-zinc-800 overflow-hidden">
