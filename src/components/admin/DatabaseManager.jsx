@@ -200,18 +200,6 @@ export default function DatabaseManager() {
           <FileText className="w-4 h-4" />
           <span>JSON Collections Explorer</span>
         </button>
-
-        <button
-          onClick={() => setActiveTab("cloud")}
-          className={`pb-3 text-xs font-bold transition-colors flex items-center space-x-2 border-b-2 ${
-            activeTab === "cloud"
-              ? "border-[#E91E63] text-[#E91E63]"
-              : "border-transparent text-gray-500 hover:text-gray-900 dark:hover:text-white"
-          }`}
-        >
-          <Cloud className="w-4 h-4" />
-          <span>Database Architecture & Firebase Setup</span>
-        </button>
       </div>
 
       {/* TAB 1: STORED PHOTOS & MEDIA */}
@@ -346,66 +334,6 @@ export default function DatabaseManager() {
             <pre className="p-4 rounded-xl bg-gray-900 text-pink-400 font-mono text-xs overflow-x-auto max-h-[500px] leading-relaxed border border-zinc-800">
               <code>{JSON.stringify(data[selectedCollection], null, 2)}</code>
             </pre>
-          </div>
-        </div>
-      )}
-
-      {/* TAB 3: ARCHITECTURE & FIREBASE SETUP */}
-      {activeTab === "cloud" && (
-        <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 sm:p-8 border border-gray-100 dark:border-zinc-800 shadow-sm space-y-6">
-          <div>
-            <h2 className="text-base font-bold text-gray-900 dark:text-white">
-              Where is the Database & Cloud Storage Stored?
-            </h2>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Complete architectural explanation of data persistence, photo storage, and Google Firebase integration.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Box 1: Current Active Database */}
-            <div className="p-5 rounded-2xl bg-gray-50 dark:bg-zinc-800/60 border border-gray-100 dark:border-zinc-800 space-y-3">
-              <div className="flex items-center space-x-2 text-gray-900 dark:text-white font-bold text-sm">
-                <HardDrive className="w-4 h-4 text-[#E91E63]" />
-                <span>1. Current Database Engine</span>
-              </div>
-              <ul className="text-xs text-gray-600 dark:text-gray-300 space-y-2 leading-relaxed">
-                <li>
-                  • <strong>Browser Persistent Database (LocalStorage):</strong> Keyed under <code className="bg-white dark:bg-zinc-800 px-1 py-0.5 rounded text-[11px]">future_events_albums_data</code>, <code className="bg-white dark:bg-zinc-800 px-1 py-0.5 rounded text-[11px]">future_events_auth_data</code>, and <code className="bg-white dark:bg-zinc-800 px-1 py-0.5 rounded text-[11px]">future_events_reviews_data</code>.
-                </li>
-                <li>
-                  • <strong>How to see in Browser DevTools:</strong> Press <kbd className="px-1.5 py-0.5 rounded bg-gray-200 dark:bg-zinc-700 text-[10px]">F12</kbd> → Click <strong>Application</strong> tab → Click <strong>Local Storage</strong> → Select <code className="text-[#E91E63]">https://future-events-kishore.vercel.app</code>.
-                </li>
-                <li>
-                  • <strong>Photo Storage:</strong> High-definition event photos are served directly via Cloud Content Delivery Networks (Unsplash/Cloudinary) and in-memory WebP Base64 compression.
-                </li>
-              </ul>
-            </div>
-
-            {/* Box 2: Google Firebase Cloud Integration */}
-            <div className="p-5 rounded-2xl bg-gray-50 dark:bg-zinc-800/60 border border-gray-100 dark:border-zinc-800 space-y-3">
-              <div className="flex items-center space-x-2 text-gray-900 dark:text-white font-bold text-sm">
-                <Cloud className="w-4 h-4 text-[#E91E63]" />
-                <span>2. Connecting Google Firebase Cloud</span>
-              </div>
-              <ul className="text-xs text-gray-600 dark:text-gray-300 space-y-2 leading-relaxed">
-                <li>
-                  • The entire codebase is pre-configured with Google Cloud Firestore and Google Firebase Storage in <code className="bg-white dark:bg-zinc-800 px-1 py-0.5 rounded text-[11px]">src/config/firebase.js</code>.
-                </li>
-                <li>
-                  • <strong>To view photos directly in Google Firebase Console:</strong>
-                  <ol className="list-decimal pl-4 mt-1 space-y-1">
-                    <li>Create a project at <a href="https://console.firebase.google.com" target="_blank" rel="noopener noreferrer" className="text-[#E91E63] underline">console.firebase.google.com</a>.</li>
-                    <li>Click <strong>Firestore Database</strong> → Create database.</li>
-                    <li>Click <strong>Storage</strong> → Enable Cloud Storage bucket.</li>
-                    <li>Add the API keys into your Vercel Environment variables or <code className="text-[11px]">.env</code> file.</li>
-                  </ol>
-                </li>
-                <li>
-                  • Once connected, all photos upload straight into Firebase Storage bucket (<code className="text-[11px]">gs://...</code>) and documents sync to Firestore live.
-                </li>
-              </ul>
-            </div>
           </div>
         </div>
       )}
