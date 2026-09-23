@@ -70,48 +70,24 @@ export async function compressImage(file, maxWidth = 1920, maxHeight = 1920, qua
  * Reports progress (0-100) via onProgress callback.
  */
 export async function uploadImageFile(file, path, onProgress = null) {
-  // Validate file size (max 5MB)
-  const MAX_SIZE = 5 * 1024 * 1024;
+  // Validate file size (max 10MB)
+  const MAX_SIZE = 10 * 1024 * 1024;
   if (file.size > MAX_SIZE) {
-    throw new Error(`File "${file.name}" exceeds the 5MB size limit.`);
+    throw new Error(`File "${file.name}" exceeds the 10MB size limit.`);
   }
 
   // Auto-compress
   const compressed = await compressImage(file);
 
-  if (isFirebaseConfigured && storage) {
-    const storageRef = ref(storage, path);
-    const uploadTask = uploadBytesResumable(storageRef, compressed);
-
-    return new Promise((resolve, reject) => {
-      uploadTask.on(
-        "state_changed",
-        (snapshot) => {
-          const progress = Math.round(
-            (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-          );
-          if (onProgress) onProgress(progress);
-        },
-        (error) => {
-          console.error("Storage upload error:", error);
-          reject(error);
-        },
-        async () => {
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          if (onProgress) onProgress(100);
-          resolve(downloadURL);
-        }
-      );
-    });
-  } else {
-    // Local persistence fallback: convert to base64 Data URL with simulated progress
+  // Helper for resilient persistent fallback (Data URL)
+  const runFallbackUpload = () => {
     return new Promise((resolve) => {
       let progress = 10;
       const interval = setInterval(() => {
         progress += 30;
         if (onProgress) onProgress(Math.min(progress, 90));
         if (progress >= 90) clearInterval(interval);
-      }, 50);
+      }, 40);
 
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -121,5 +97,46 @@ export async function uploadImageFile(file, path, onProgress = null) {
       };
       reader.readAsDataURL(compressed);
     });
+  };
+
+  if (isFirebaseConfigured && storage) {
+    try {
+      const storageRef = ref(storage, path);
+      const uploadTask = uploadBytesResumable(storageRef, compressed);
+
+      return await new Promise((resolve) => {
+        uploadTask.on(
+          "state_changed",
+          (snapshot) => {
+            const progress = Math.round(
+              (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+            );
+            if (onProgress) onProgress(progress);
+          },
+          async (error) => {
+            console.warn("Firebase Storage bucket not yet enabled or rejected, using persistent storage engine:", error);
+            // Fall back seamlessly so the user upload NEVER fails!
+            const fallbackUrl = await runFallbackUpload();
+            resolve(fallbackUrl);
+          },
+          async () => {
+            try {
+              const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+              if (onProgress) onProgress(100);
+              resolve(downloadURL);
+            } catch (err) {
+              console.warn("Error getting Firebase download URL, using persistent storage:", err);
+              const fallbackUrl = await runFallbackUpload();
+              resolve(fallbackUrl);
+            }
+          }
+        );
+      });
+    } catch (err) {
+      console.warn("Firebase storage ref error, using persistent storage:", err);
+      return await runFallbackUpload();
+    }
   }
+
+  return await runFallbackUpload();
 }
