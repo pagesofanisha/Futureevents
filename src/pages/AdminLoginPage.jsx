@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   Lock,
@@ -7,14 +7,15 @@ import {
   Shield,
   ArrowLeft,
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  Sparkles
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useData } from "../context/DataContext";
 
 export default function AdminLoginPage() {
   const navigate = useNavigate();
-  const { loginWithPassword, loginWithGoogle } = useAuth();
+  const { isAdminLoggedIn, loginWithPassword, loginWithGoogle } = useAuth();
   const { businessData } = useData();
 
   const [password, setPassword] = useState("");
@@ -25,6 +26,13 @@ export default function AdminLoginPage() {
   const [googleEmail, setGoogleEmail] = useState("");
   const [showGoogleModal, setShowGoogleModal] = useState(false);
   const [googleSuccess, setGoogleSuccess] = useState(false);
+
+  // Auto-redirect if already logged in or state transitions to logged in
+  useEffect(() => {
+    if (isAdminLoggedIn) {
+      navigate("/admin", { replace: true });
+    }
+  }, [isAdminLoggedIn, navigate]);
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
@@ -39,7 +47,7 @@ export default function AdminLoginPage() {
     try {
       const res = await loginWithPassword(password);
       if (res.success) {
-        navigate("/admin");
+        navigate("/admin", { replace: true });
       } else {
         setError(res.error || "Incorrect password.");
       }
@@ -50,14 +58,34 @@ export default function AdminLoginPage() {
     }
   };
 
-  const handleGoogleClick = () => {
+  // 1-Click Direct Google Sign-In
+  const handleGoogleClick = async () => {
     setError("");
-    setShowGoogleModal(true);
+    setIsLoading(true);
+
+    try {
+      const res = await loginWithGoogle();
+      if (res.success) {
+        setGoogleSuccess(true);
+        navigate("/admin", { replace: true });
+        return;
+      } else {
+        // Fallback to manual authorized email entry if popup was closed or not enabled
+        setError(res.error || "Google sign-in could not be completed.");
+        setShowGoogleModal(true);
+      }
+    } catch (err) {
+      setError(err.message || "Google authentication failed.");
+      setShowGoogleModal(true);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleGoogleVerify = async (e) => {
+  const handleGoogleVerify = async (e, directEmail = null) => {
     if (e) e.preventDefault();
-    if (!googleEmail.trim()) {
+    const emailToUse = (directEmail || googleEmail).trim();
+    if (!emailToUse) {
       setError("Please enter your Google account email address.");
       return;
     }
@@ -66,12 +94,11 @@ export default function AdminLoginPage() {
     setError("");
 
     try {
-      const res = await loginWithGoogle(googleEmail.trim());
+      const res = await loginWithGoogle(emailToUse);
       if (res.success) {
         setGoogleSuccess(true);
-        setTimeout(() => {
-          navigate("/admin");
-        }, 800);
+        setShowGoogleModal(false);
+        navigate("/admin", { replace: true });
       } else {
         setError(res.error || "Google login authorization failed.");
       }
@@ -252,22 +279,53 @@ export default function AdminLoginPage() {
               </button>
             </div>
 
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 mb-4 leading-relaxed">
-              Enter your Google Account email to authenticate administrative access.
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 mb-3 leading-relaxed">
+              Authenticate using your authorized Google Account to access the management portal.
             </p>
+
+            {/* Quick 1-Click Authorized Email Selector */}
+            <div className="mb-4 p-3 bg-pink-50/60 dark:bg-zinc-800/60 rounded-xl border border-pink-100 dark:border-zinc-700/60">
+              <span className="text-[11px] font-bold text-gray-700 dark:text-gray-300 block mb-2 flex items-center space-x-1">
+                <Sparkles className="w-3.5 h-3.5 text-[#E91E63]" />
+                <span>1-Click Select Authorized Admin Account:</span>
+              </span>
+              <div className="flex flex-col gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setGoogleEmail("futureeventskishore@gmail.com");
+                    handleGoogleVerify(null, "futureeventskishore@gmail.com");
+                  }}
+                  className="text-left text-xs bg-white dark:bg-zinc-900 hover:border-[#E91E63] text-gray-800 dark:text-gray-200 font-semibold px-3 py-2 rounded-lg border border-gray-200 dark:border-zinc-700 transition-all flex items-center justify-between group"
+                >
+                  <span className="truncate">futureeventskishore@gmail.com</span>
+                  <span className="text-[10px] text-[#E91E63] font-bold opacity-0 group-hover:opacity-100 transition-opacity">Select →</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setGoogleEmail("pagesofanisha@gmail.com");
+                    handleGoogleVerify(null, "pagesofanisha@gmail.com");
+                  }}
+                  className="text-left text-xs bg-white dark:bg-zinc-900 hover:border-[#E91E63] text-gray-800 dark:text-gray-200 font-semibold px-3 py-2 rounded-lg border border-gray-200 dark:border-zinc-700 transition-all flex items-center justify-between group"
+                >
+                  <span className="truncate">pagesofanisha@gmail.com</span>
+                  <span className="text-[10px] text-[#E91E63] font-bold opacity-0 group-hover:opacity-100 transition-opacity">Select →</span>
+                </button>
+              </div>
+            </div>
 
             <form onSubmit={handleGoogleVerify} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                  Google Account Email
+                  Or Enter Any Other Authorized Google Email
                 </label>
                 <input
                   type="email"
                   required
-                  autoFocus
                   value={googleEmail}
                   onChange={(e) => setGoogleEmail(e.target.value)}
-                  placeholder="Enter your Google account email"
+                  placeholder="e.g. yourname@gmail.com"
                   className="w-full px-3.5 py-2.5 border border-gray-300 dark:border-zinc-700 rounded-lg text-sm bg-white dark:bg-zinc-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E91E63]"
                 />
               </div>

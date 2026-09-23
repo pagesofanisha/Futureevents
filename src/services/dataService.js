@@ -232,6 +232,21 @@ export async function getAlbums() {
     } catch {}
   }
 
+  if (albums && Array.isArray(albums)) {
+    let changed = false;
+    albums = albums.map((a) => {
+      // If thumbnail is empty or pointing to default unsplash image and album has user photos, use first photo as cover
+      if ((!a.thumbnail || a.thumbnail.includes("unsplash.com")) && a.photos && a.photos.length > 0) {
+        changed = true;
+        return { ...a, thumbnail: a.photos[0].url };
+      }
+      return a;
+    });
+    if (changed) {
+      setLocalItem(STORAGE_KEYS.ALBUMS, albums);
+    }
+  }
+
   return albums || initialAlbumsData;
 }
 
@@ -242,7 +257,7 @@ export async function createAlbum(albumData) {
     name: albumData.name,
     category: albumData.category || "General",
     description: albumData.description || "",
-    thumbnail: albumData.thumbnail || (albumData.photos?.[0]?.url || "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80"),
+    thumbnail: albumData.thumbnail || (albumData.photos?.[0]?.url || ""),
     photoCount: albumData.photos?.length || 0,
     createdDate: new Date().toISOString().split("T")[0],
     photos: albumData.photos || []
@@ -263,9 +278,12 @@ export async function updateAlbum(albumId, data) {
   const updatedAlbums = albums.map(a => {
     if (a.id === albumId) {
       const updated = { ...a, ...data, updatedDate: new Date().toISOString() };
+      if (data.thumbnail !== undefined) {
+        updated.thumbnail = data.thumbnail;
+      }
       if (data.photos) {
         updated.photoCount = data.photos.length;
-        if (!updated.thumbnail && data.photos.length > 0) {
+        if ((!updated.thumbnail || updated.thumbnail.includes("unsplash.com")) && data.photos.length > 0) {
           updated.thumbnail = data.photos[0].url;
         }
       }
@@ -311,10 +329,13 @@ export async function addPhotoToAlbum(albumId, photo) {
   };
 
   const newPhotos = [newPhoto, ...(album.photos || [])];
+  // Auto-set thumbnail if missing or pointing to default unsplash
+  const shouldUpdateThumbnail = !album.thumbnail || album.thumbnail.includes("unsplash.com") || !album.photos || album.photos.length === 0;
+
   const updatedData = {
     photos: newPhotos,
     photoCount: newPhotos.length,
-    thumbnail: album.thumbnail || newPhoto.url
+    thumbnail: shouldUpdateThumbnail ? newPhoto.url : album.thumbnail
   };
 
   await updateAlbum(albumId, updatedData);

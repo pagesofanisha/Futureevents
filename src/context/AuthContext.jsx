@@ -61,6 +61,42 @@ export function AuthProvider({ children }) {
     };
   }, [isAdminLoggedIn]);
 
+  // Firebase Auth State Listener: Auto-detect Google sign-in and authorize automatically
+  useEffect(() => {
+    if (!isFirebaseConfigured || !auth) return;
+
+    try {
+      const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
+        if (firebaseUser && firebaseUser.email) {
+          const email = firebaseUser.email.trim().toLowerCase();
+          const creds = await getAuthCredentials();
+          const defaultAllowed = ["pagesofanisha@gmail.com", "futureeventskishore@gmail.com"];
+          const customAllowed = Array.isArray(creds?.allowedEmails) ? creds.allowedEmails : [];
+          const allowed = Array.from(new Set([...defaultAllowed, ...customAllowed])).map((e) => e.trim().toLowerCase());
+
+          if (allowed.includes(email)) {
+            const expiry = Date.now() + INACTIVITY_TIMEOUT_MS;
+            localStorage.setItem("future_events_admin_token", "google_oauth_" + Date.now());
+            localStorage.setItem("future_events_admin_expiry", expiry.toString());
+            const user = {
+              name: firebaseUser.displayName || email.split("@")[0].replace(/[._-]/g, " "),
+              email: email,
+              role: "Owner / Administrator",
+              loginMethod: "google",
+              verified: true
+            };
+            localStorage.setItem("future_events_admin_user", JSON.stringify(user));
+            setIsAdminLoggedIn(true);
+            setAdminUser(user);
+          }
+        }
+      });
+      return () => unsubscribe();
+    } catch (err) {
+      console.warn("onAuthStateChanged setup warning:", err);
+    }
+  }, []);
+
   // Method 1: Password Login
   const loginWithPassword = async (enteredPassword) => {
     const creds = await getAuthCredentials();
@@ -88,6 +124,7 @@ export function AuthProvider({ children }) {
     if (!emailToVerify && isFirebaseConfigured && auth) {
       try {
         const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: "select_account" });
         const result = await signInWithPopup(auth, provider);
         if (result && result.user && result.user.email) {
           emailToVerify = result.user.email.trim().toLowerCase();
@@ -96,7 +133,7 @@ export function AuthProvider({ children }) {
         console.warn("Firebase Google popup error:", err);
         return {
           success: false,
-          error: "Google sign-in popup cancelled or failed: " + (err.message || "Failed")
+          error: "Google sign-in popup closed or failed: " + (err.message || "Failed")
         };
       }
     }
@@ -110,10 +147,9 @@ export function AuthProvider({ children }) {
 
     // Fetch allowed admin emails from backend database
     const creds = await getAuthCredentials();
-    const allowed = (creds.allowedEmails || [
-      "pagesofanisha@gmail.com",
-      "futureeventskishore@gmail.com"
-    ]).map((e) => e.trim().toLowerCase());
+    const defaultAllowed = ["pagesofanisha@gmail.com", "futureeventskishore@gmail.com"];
+    const customAllowed = Array.isArray(creds?.allowedEmails) ? creds.allowedEmails : [];
+    const allowed = Array.from(new Set([...defaultAllowed, ...customAllowed])).map((e) => e.trim().toLowerCase());
 
     if (!allowed.includes(emailToVerify)) {
       return {

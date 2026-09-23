@@ -27,7 +27,12 @@ export default function AlbumsStrip() {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
             {albums.map((album) => {
               const photoCount = album.photos?.length || album.photoCount || 0;
-              const thumb = album.thumbnail || album.photos?.[0]?.url || "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=400&q=80";
+              const thumb =
+                album.thumbnail && !album.thumbnail.includes("unsplash.com")
+                  ? album.thumbnail
+                  : album.photos?.[0]?.url ||
+                    album.thumbnail ||
+                    "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=400&q=80";
 
               return (
                 <div

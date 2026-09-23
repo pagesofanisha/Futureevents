@@ -158,6 +158,16 @@ export default function GalleryManager() {
     }
   };
 
+  // 5b. Set as Album Cover Photo
+  const handleSetCoverPhoto = async (photoUrl) => {
+    if (!currentAlbum) return;
+    try {
+      await updateAlbum(currentAlbum.id, { thumbnail: photoUrl });
+    } catch (err) {
+      alert("Failed to set cover photo: " + err.message);
+    }
+  };
+
   // 6. Reorder Photo (Up / Down)
   const handleMovePhoto = async (index, direction) => {
     if (!currentAlbum?.photos) return;
@@ -366,20 +376,41 @@ export default function GalleryManager() {
         <div className="lg:col-span-8 space-y-5">
           {currentAlbum ? (
             <div className="bg-white dark:bg-zinc-900 rounded-2xl p-5 sm:p-6 border border-gray-100 dark:border-zinc-800 shadow-sm">
-              <div className="flex justify-between items-center pb-4 mb-4 border-b border-gray-100 dark:border-zinc-800">
-                <div>
-                  <div className="flex items-center space-x-2">
-                    <h3 className="text-base font-bold text-gray-900 dark:text-white">
-                      {currentAlbum.name}
-                    </h3>
-                    <span className="text-xs bg-pink-100 dark:bg-pink-950/60 text-[#E91E63] font-semibold px-2 py-0.5 rounded-full">
-                      {currentAlbum.photos?.length || 0} Photos
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 mb-4 border-b border-gray-100 dark:border-zinc-800">
+                <div className="flex items-center space-x-3.5">
+                  <div className="relative group flex-shrink-0">
+                    <img
+                      src={currentAlbum.thumbnail || currentAlbum.photos?.[0]?.url || "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=150&q=80"}
+                      alt="Cover"
+                      className="w-14 h-14 rounded-xl object-cover border-2 border-[#E91E63] shadow-md bg-zinc-800"
+                    />
+                    <span className="absolute -bottom-1 -right-1 bg-[#E91E63] text-white text-[9px] font-black px-1.5 py-0.5 rounded-full shadow flex items-center space-x-0.5">
+                      <Sparkles className="w-2.5 h-2.5" />
+                      <span>Cover</span>
                     </span>
                   </div>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    {currentAlbum.description || "Upload and organize photos for this collection."}
-                  </p>
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <h3 className="text-base font-bold text-gray-900 dark:text-white">
+                        {currentAlbum.name}
+                      </h3>
+                      <span className="text-xs bg-pink-100 dark:bg-pink-950/60 text-[#E91E63] font-semibold px-2 py-0.5 rounded-full">
+                        {currentAlbum.photos?.length || 0} Photos
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">
+                      {currentAlbum.description || "Upload event photos and pick any photo below to set as the album cover."}
+                    </p>
+                  </div>
                 </div>
+
+                {/* Album Cover Selection Helper */}
+                {currentAlbum.photos && currentAlbum.photos.length > 0 && (
+                  <div className="text-xs text-gray-600 dark:text-gray-300 bg-pink-50/80 dark:bg-zinc-800/80 px-3 py-1.5 rounded-xl border border-pink-200 dark:border-zinc-700 flex items-center space-x-1.5 self-start sm:self-auto">
+                    <Sparkles className="w-3.5 h-3.5 text-[#E91E63] flex-shrink-0" />
+                    <span>Click <strong>"Set as Cover"</strong> on any photo below to update album cover</span>
+                  </div>
+                )}
               </div>
 
               {/* Drag & Drop Upload Dropzone */}
@@ -471,64 +502,121 @@ export default function GalleryManager() {
 
               {/* Photos List Grid */}
               <div className="mt-6">
-                <span className="text-xs font-bold uppercase tracking-wider text-gray-400 block mb-3">
-                  Photos in Album ({currentAlbum.photos?.length || 0})
-                </span>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-bold uppercase tracking-wider text-gray-400 block">
+                    Photos in Album ({currentAlbum.photos?.length || 0})
+                  </span>
+                  <span className="text-[11px] text-[#E91E63] font-semibold">
+                    Cover photo is displayed on homepage and client albums
+                  </span>
+                </div>
 
                 {currentAlbum.photos && currentAlbum.photos.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                    {currentAlbum.photos.map((photo, idx) => (
-                      <div
-                        key={photo.id || idx}
-                        className="group relative rounded-xl overflow-hidden border border-gray-200 dark:border-zinc-800 bg-zinc-900 aspect-square"
-                      >
-                        <img
-                          src={photo.url}
-                          alt=""
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                        />
-                        {/* Hover Overlay with Controls */}
-                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2 text-white">
-                          {/* Top controls: Reorder Up & Down */}
-                          <div className="flex justify-between items-center">
-                            <div className="flex space-x-1">
-                              {idx > 0 && (
-                                <button
-                                  onClick={() => handleMovePhoto(idx, "up")}
-                                  className="p-1 rounded bg-white/20 hover:bg-white/40 text-white"
-                                  title="Move Earlier"
-                                >
-                                  <ArrowUp className="w-3.5 h-3.5" />
-                                </button>
-                              )}
-                              {idx < currentAlbum.photos.length - 1 && (
-                                <button
-                                  onClick={() => handleMovePhoto(idx, "down")}
-                                  className="p-1 rounded bg-white/20 hover:bg-white/40 text-white"
-                                  title="Move Later"
-                                >
-                                  <ArrowDown className="w-3.5 h-3.5" />
-                                </button>
-                              )}
-                            </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5">
+                    {currentAlbum.photos.map((photo, idx) => {
+                      const isCover = currentAlbum.thumbnail === photo.url || (!currentAlbum.thumbnail && idx === 0);
+                      return (
+                        <div
+                          key={photo.id || idx}
+                          className={`group relative rounded-xl overflow-hidden border transition-all ${
+                            isCover
+                              ? "border-2 border-[#E91E63] shadow-md ring-2 ring-[#E91E63]/25 bg-pink-50/20 dark:bg-pink-950/20"
+                              : "border-gray-200 dark:border-zinc-800 hover:border-[#E91E63]/50 bg-zinc-900"
+                          } flex flex-col`}
+                        >
+                          <div className="relative aspect-square overflow-hidden bg-zinc-900">
+                            <img
+                              src={photo.url}
+                              alt=""
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                            />
 
-                            {/* Delete button */}
-                            <button
-                              onClick={() => handleDeletePhoto(photo.id)}
-                              className="p-1 rounded bg-red-600 hover:bg-red-700 text-white"
-                              title="Delete Photo"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
+                            {/* Prominent Cover Badge */}
+                            {isCover && (
+                              <div className="absolute top-2 left-2 z-10 bg-[#E91E63] text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-md flex items-center space-x-1">
+                                <Sparkles className="w-3 h-3" />
+                                <span>Cover Photo</span>
+                              </div>
+                            )}
+
+                            {/* Hover Overlay with Controls */}
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2 text-white">
+                              {/* Top controls: Reorder Up & Down */}
+                              <div className="flex justify-between items-center">
+                                <div className="flex space-x-1">
+                                  {idx > 0 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleMovePhoto(idx, "up")}
+                                      className="p-1 rounded bg-white/20 hover:bg-white/40 text-white"
+                                      title="Move Earlier"
+                                    >
+                                      <ArrowUp className="w-3.5 h-3.5" />
+                                    </button>
+                                  )}
+                                  {idx < currentAlbum.photos.length - 1 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleMovePhoto(idx, "down")}
+                                      className="p-1 rounded bg-white/20 hover:bg-white/40 text-white"
+                                      title="Move Later"
+                                    >
+                                      <ArrowDown className="w-3.5 h-3.5" />
+                                    </button>
+                                  )}
+                                </div>
+
+                                {/* Delete button */}
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeletePhoto(photo.id)}
+                                  className="p-1 rounded bg-red-600 hover:bg-red-700 text-white"
+                                  title="Delete Photo"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+
+                              {/* Center Action: Set as Cover on Hover */}
+                              {!isCover && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleSetCoverPhoto(photo.url)}
+                                  className="bg-[#E91E63] hover:bg-[#D81B60] text-white text-xs font-bold py-1.5 px-3 rounded-lg shadow transition-transform active:scale-95 flex items-center justify-center space-x-1 mx-auto"
+                                >
+                                  <Sparkles className="w-3.5 h-3.5" />
+                                  <span>Make Cover</span>
+                                </button>
+                              )}
+
+                              {/* Caption */}
+                              <p className="text-[10px] text-gray-200 line-clamp-1">
+                                {photo.caption || "Event Photo"}
+                              </p>
+                            </div>
                           </div>
 
-                          {/* Caption */}
-                          <p className="text-[10px] text-gray-200 line-clamp-2">
-                            {photo.caption || "Event Photo"}
-                          </p>
+                          {/* Footer below photo: Always visible Set as Cover button or Active indicator */}
+                          <div className="p-2 bg-white dark:bg-zinc-800 border-t border-gray-100 dark:border-zinc-700/60 flex items-center justify-between text-xs">
+                            {isCover ? (
+                              <span className="text-[#E91E63] font-bold text-[11px] flex items-center space-x-1 py-0.5">
+                                <Check className="w-3.5 h-3.5 stroke-[3]" />
+                                <span>Album Cover</span>
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleSetCoverPhoto(photo.url)}
+                                className="w-full text-left text-gray-600 dark:text-gray-300 hover:text-[#E91E63] dark:hover:text-[#E91E63] font-semibold text-[11px] flex items-center space-x-1 py-0.5 transition-colors group/btn"
+                              >
+                                <Sparkles className="w-3.5 h-3.5 text-gray-400 group-hover/btn:text-[#E91E63]" />
+                                <span>Set as Cover</span>
+                              </button>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="text-center py-8 text-gray-400">
