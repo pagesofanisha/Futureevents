@@ -52,7 +52,7 @@ function setLocalItem(key, value) {
 }
 
 // Helper: Timeout for Firestore reads to avoid hanging on unprovisioned databases
-function withTimeout(promise, ms = 800) {
+function withTimeout(promise, ms = 3500) {
   return Promise.race([
     promise,
     new Promise((_, reject) =>
@@ -61,17 +61,54 @@ function withTimeout(promise, ms = 800) {
   ]);
 }
 
-// Helper: Fire-and-forget background sync to Firestore (capped at 1200ms)
+// Helper: Background sync to Firestore with a 8000ms timeout
 function safeFirestoreSync(fn) {
   if (isFirebaseConfigured && db) {
     Promise.race([
       fn(),
       new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Firestore sync timeout")), 1200)
+        setTimeout(() => reject(new Error("Firestore sync timeout (8s)")), 8000)
       )
-    ]).catch((err) => {
-      console.warn("Firestore sync skipped or timed out:", err.message);
-    });
+    ])
+      .then(() => {
+        console.log("☁️ Data successfully synced to Google Firebase Cloud!");
+      })
+      .catch((err) => {
+        console.warn("Firestore sync skipped or rejected:", err.message);
+      });
+  }
+}
+
+/**
+ * Diagnostic tool to check live Firebase Cloud Firestore connection status.
+ */
+export async function checkCloudStatus() {
+  if (!isFirebaseConfigured || !db) {
+    return {
+      connected: false,
+      reason: "Firebase credentials not configured in environment."
+    };
+  }
+  try {
+    const testDoc = doc(db, "_health", "ping");
+    await withTimeout(getDoc(testDoc), 3500);
+    return {
+      connected: true,
+      message: "Firebase Cloud Firestore is active & connected!"
+    };
+  } catch (err) {
+    const msg = err.message || "";
+    let reason = "Cloud connection error";
+    if (msg.includes("PERMISSION_DENIED") || msg.includes("disabled")) {
+      reason = "Cloud Firestore API not enabled in Firebase Console.";
+    } else if (msg.includes("timeout")) {
+      reason = "Connection timed out. Check network or database creation.";
+    }
+    return {
+      connected: false,
+      reason,
+      rawError: msg
+    };
   }
 }
 

@@ -86,25 +86,29 @@ export async function uploadImageFile(file, path, onProgress = null) {
     throw new Error("Unable to read image file.");
   }
 
-  // Attempt Firebase Storage in a 1.5s race condition
+  // Attempt Firebase Storage with a 10-second timeout for reliable cloud hosting
   if (isFirebaseConfigured && storage) {
     try {
       const storageRef = ref(storage, path);
+      if (onProgress) onProgress(40);
+      
       const uploadPromise = uploadString(storageRef, dataUrl, "data_url")
         .then(async (snapshot) => {
+          if (onProgress) onProgress(80);
           const cloudUrl = await getDownloadURL(snapshot.ref);
           return cloudUrl;
         });
 
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Firebase Storage timeout")), 1500)
+        setTimeout(() => reject(new Error("Firebase Storage timeout (10s)")), 10000)
       );
 
       const resultUrl = await Promise.race([uploadPromise, timeoutPromise]);
       if (onProgress) onProgress(100);
+      console.log("☁️ Successfully uploaded photo to permanent Firebase Cloud Storage:", resultUrl);
       return resultUrl;
     } catch (err) {
-      console.info("Using instant persistent storage for photo:", err.message);
+      console.warn("Firebase Storage cloud upload not available, using high-capacity storage engine:", err.message);
     }
   }
 

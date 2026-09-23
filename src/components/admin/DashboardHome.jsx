@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   FolderOpen,
   Image as ImageIcon,
@@ -10,13 +10,31 @@ import {
   MessageSquare,
   ShieldCheck,
   ExternalLink,
-  Cloud
+  Cloud,
+  CheckCircle2,
+  AlertTriangle,
+  RefreshCw,
+  ArrowUpRight
 } from "lucide-react";
 import { useData } from "../../context/DataContext";
 import { isFirebaseConfigured } from "../../config/firebase";
+import { checkCloudStatus } from "../../services/dataService";
 
 export default function DashboardHome({ setActiveTab, onOpenCreateAlbumModal }) {
   const { albums, reviews, businessData, contactData } = useData();
+  const [cloudStatus, setCloudStatus] = useState(null);
+  const [isTestingCloud, setIsTestingCloud] = useState(false);
+
+  const testConnection = async () => {
+    setIsTestingCloud(true);
+    const res = await checkCloudStatus();
+    setCloudStatus(res);
+    setIsTestingCloud(false);
+  };
+
+  useEffect(() => {
+    testConnection();
+  }, []);
 
   const totalPhotos = albums.reduce((sum, a) => sum + (a.photos?.length || 0), 0);
 
@@ -27,7 +45,7 @@ export default function DashboardHome({ setActiveTab, onOpenCreateAlbumModal }) 
         <div className="relative z-10 max-w-2xl">
           <div className="inline-flex items-center space-x-1.5 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold mb-3">
             <ShieldCheck className="w-3.5 h-3.5 text-yellow-300" />
-            <span>Administrator Workspace</span>
+            <span>Administrator Workspace · Proprietorship under Kishore</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black">
             Welcome back, {businessData.manager || "Kishore"}!
@@ -60,22 +78,99 @@ export default function DashboardHome({ setActiveTab, onOpenCreateAlbumModal }) 
         <div className="absolute -right-10 -bottom-10 w-60 h-60 bg-white/10 rounded-full blur-2xl pointer-events-none" />
       </div>
 
-      {/* Cloud Status Alert */}
-      <div className="bg-white dark:bg-zinc-900 p-4 rounded-xl border border-gray-200 dark:border-zinc-800 flex items-center justify-between text-xs transition-colors">
-        <div className="flex items-center space-x-2.5">
-          <Cloud className={`w-4 h-4 ${isFirebaseConfigured ? "text-emerald-500" : "text-amber-500"}`} />
-          <div>
-            <span className="font-bold text-gray-900 dark:text-white">
-              {isFirebaseConfigured ? "Firebase Cloud Live Sync: Active" : "Dual-Engine Local Persistence: Active"}
-            </span>
-            <p className="text-gray-500">
-              {isFirebaseConfigured
-                ? "Changes immediately save to your Firebase Firestore & Storage."
-                : "Changes immediately persist locally with instant UI sync. Add Firebase credentials in .env whenever you wish to sync to your cloud project."}
-            </p>
+      {/* Cloud Status Alert Card */}
+      {cloudStatus && (
+        <div
+          className={`p-5 rounded-2xl border transition-colors ${
+            cloudStatus.connected
+              ? "bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800"
+              : "bg-amber-50/80 dark:bg-amber-950/30 border-amber-300 dark:border-amber-800"
+          }`}
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-start space-x-3">
+              {cloudStatus.connected ? (
+                <div className="p-2 rounded-xl bg-emerald-500 text-white flex-shrink-0">
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
+              ) : (
+                <div className="p-2 rounded-xl bg-amber-500 text-white flex-shrink-0">
+                  <AlertTriangle className="w-5 h-5" />
+                </div>
+              )}
+
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2">
+                  <span className="font-bold text-sm text-gray-900 dark:text-white">
+                    {cloudStatus.connected
+                      ? "Firebase Cloud Database: Online & Connected"
+                      : "Action Needed: Activate Cloud Firestore in Firebase Console"}
+                  </span>
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                      cloudStatus.connected
+                        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300"
+                        : "bg-amber-200 text-amber-900 dark:bg-amber-900/60 dark:text-amber-200"
+                    }`}
+                  >
+                    {cloudStatus.connected ? "Cloud Active" : "Pending 1-Click Setup"}
+                  </span>
+                </div>
+
+                <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                  {cloudStatus.connected
+                    ? "Your changes, photos, and branding are permanently stored in Google Cloud Firestore & Storage, visible on all client phones and laptops instantly."
+                    : "Google Cloud requires creating the Firestore database for project 'future-events-kishore'. Until you click 'Create database' in Firebase Console, Google rejects cloud saves and changes only stay on this browser."}
+                </p>
+
+                {!cloudStatus.connected && (
+                  <div className="pt-2 flex flex-wrap gap-2">
+                    <a
+                      href="https://console.firebase.google.com/project/future-events-kishore/firestore"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center space-x-1.5 bg-[#E91E63] hover:bg-[#D81B60] text-white px-3.5 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-transform active:scale-95"
+                    >
+                      <span>1. Click to Create Firestore Database</span>
+                      <ArrowUpRight className="w-3.5 h-3.5" />
+                    </a>
+
+                    <a
+                      href="https://console.firebase.google.com/project/future-events-kishore/storage"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center space-x-1.5 bg-gray-900 dark:bg-zinc-800 hover:bg-black text-white px-3.5 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-transform active:scale-95"
+                    >
+                      <span>2. Click to Enable Storage Bucket</span>
+                      <ArrowUpRight className="w-3.5 h-3.5" />
+                    </a>
+
+                    <button
+                      onClick={testConnection}
+                      disabled={isTestingCloud}
+                      className="inline-flex items-center space-x-1 bg-white dark:bg-zinc-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-zinc-700 hover:bg-gray-50 px-3 py-1.5 rounded-lg text-xs font-semibold"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${isTestingCloud ? "animate-spin" : ""}`} />
+                      <span>{isTestingCloud ? "Testing..." : "Test Connection"}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {cloudStatus.connected && (
+              <button
+                onClick={testConnection}
+                disabled={isTestingCloud}
+                className="self-start sm:self-center p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-xs flex items-center space-x-1"
+                title="Refresh Cloud Status"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isTestingCloud ? "animate-spin" : ""}`} />
+              </button>
+            )}
           </div>
         </div>
-      </div>
+      )}
 
       {/* Metric Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
