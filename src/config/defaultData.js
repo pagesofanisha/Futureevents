@@ -296,6 +296,11 @@ export const initialAuthData = {
   // Plain initial temporary password is "Futureeventskishore2026"
   // When changed in settings, it is updated securely.
   adminPassword: "Futureeventskishore2026",
+  // Up to 3 authorized Google emails allowed to log in via Google OAuth
+  allowedEmails: [
+    "pagesofanisha@gmail.com",
+    "futureeventskishore@gmail.com"
+  ],
   lastChanged: "2026-09-23",
   isConfigured: true
 };

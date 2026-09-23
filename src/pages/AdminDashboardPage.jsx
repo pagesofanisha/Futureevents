@@ -13,7 +13,8 @@ import {
   ExternalLink,
   Shield,
   Menu,
-  X
+  X,
+  Database
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
@@ -25,6 +26,7 @@ import BusinessInfoEditor from "../components/admin/BusinessInfoEditor";
 import ContactInfoEditor from "../components/admin/ContactInfoEditor";
 import ReviewsManager from "../components/admin/ReviewsManager";
 import SettingsManager from "../components/admin/SettingsManager";
+import DatabaseManager from "../components/admin/DatabaseManager";
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
@@ -47,6 +49,7 @@ export default function AdminDashboardPage() {
     { id: "business", label: "Business Details", icon: Briefcase },
     { id: "contact", label: "Studio Contacts", icon: Phone },
     { id: "reviews", label: "Client Reviews", icon: MessageSquare },
+    { id: "database", label: "Database & Storage", icon: Database },
     { id: "settings", label: "Settings & Security", icon: Settings },
   ];
 
@@ -221,6 +224,7 @@ export default function AdminDashboardPage() {
           {activeTab === "business" && <BusinessInfoEditor />}
           {activeTab === "contact" && <ContactInfoEditor />}
           {activeTab === "reviews" && <ReviewsManager />}
+          {activeTab === "database" && <DatabaseManager />}
           {activeTab === "settings" && <SettingsManager />}
         </main>
       </div>

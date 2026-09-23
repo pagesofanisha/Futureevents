@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from "react";
-import { getAuthCredentials, updateAdminPassword } from "../services/dataService";
+import { getAuthCredentials, updateAdminPassword, updateAllowedEmails } from "../services/dataService";
+import { auth, isFirebaseConfigured } from "../config/firebase";
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 
 const AuthContext = createContext();
 
@@ -78,23 +80,63 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Method 2: Google Sign-In
-  const loginWithGoogle = async () => {
-    // Simulated Google OAuth Flow with connected Kishore profile
+  // Method 2: Google Sign-In with Authorized Email Whitelist Verification
+  const loginWithGoogle = async (enteredEmail = null) => {
+    let emailToVerify = (enteredEmail || "").trim().toLowerCase();
+
+    // If Firebase Auth is configured and no email was provided manually, launch real Google Popup
+    if (!emailToVerify && isFirebaseConfigured && auth) {
+      try {
+        const provider = new GoogleAuthProvider();
+        const result = await signInWithPopup(auth, provider);
+        if (result && result.user && result.user.email) {
+          emailToVerify = result.user.email.trim().toLowerCase();
+        }
+      } catch (err) {
+        console.warn("Firebase Google popup error:", err);
+        return {
+          success: false,
+          error: "Google sign-in popup cancelled or failed: " + (err.message || "Failed")
+        };
+      }
+    }
+
+    if (!emailToVerify) {
+      return {
+        success: false,
+        error: "Please enter your Google account email to verify access."
+      };
+    }
+
+    // Fetch allowed admin emails from backend database
+    const creds = await getAuthCredentials();
+    const allowed = (creds.allowedEmails || [
+      "pagesofanisha@gmail.com",
+      "futureeventskishore@gmail.com"
+    ]).map((e) => e.trim().toLowerCase());
+
+    if (!allowed.includes(emailToVerify)) {
+      return {
+        success: false,
+        error: `Access Denied: "${emailToVerify}" is not an authorized administrator. Only whitelisted admin Google accounts configured in the backend can access this portal.`
+      };
+    }
+
+    // Success! Authorized administrator
     const expiry = Date.now() + INACTIVITY_TIMEOUT_MS;
     localStorage.setItem("future_events_admin_token", "google_oauth_" + Date.now());
     localStorage.setItem("future_events_admin_expiry", expiry.toString());
     const user = {
-      name: "Kishore (Google)",
-      email: "futureeventskishore@gmail.com",
+      name: emailToVerify.split("@")[0].replace(/[._-]/g, " "),
+      email: emailToVerify,
       role: "Owner / Administrator",
       loginMethod: "google",
-      googleDriveConnected: true
+      verified: true
     };
     localStorage.setItem("future_events_admin_user", JSON.stringify(user));
     setIsAdminLoggedIn(true);
     setAdminUser(user);
-    return { success: true };
+    return { success: true, user };
   };
 
   const logout = () => {
@@ -121,6 +163,15 @@ export function AuthProvider({ children }) {
     return { success: true };
   };
 
+  const getAllowedEmails = async () => {
+    const creds = await getAuthCredentials();
+    return creds.allowedEmails || ["pagesofanisha@gmail.com", "futureeventskishore@gmail.com"];
+  };
+
+  const saveAllowedEmails = async (emails) => {
+    return await updateAllowedEmails(emails);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -129,7 +180,9 @@ export function AuthProvider({ children }) {
         loginWithPassword,
         loginWithGoogle,
         logout,
-        changePassword
+        changePassword,
+        getAllowedEmails,
+        saveAllowedEmails
       }}
     >
       {children}

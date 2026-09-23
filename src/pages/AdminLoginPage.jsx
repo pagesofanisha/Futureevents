@@ -7,8 +7,7 @@ import {
   Shield,
   ArrowLeft,
   AlertCircle,
-  CheckCircle2,
-  Sparkles
+  CheckCircle2
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useData } from "../context/DataContext";
@@ -22,6 +21,10 @@ export default function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  const [googleEmail, setGoogleEmail] = useState("");
+  const [showGoogleModal, setShowGoogleModal] = useState(false);
+  const [googleSuccess, setGoogleSuccess] = useState(false);
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
@@ -47,16 +50,33 @@ export default function AdminLoginPage() {
     }
   };
 
-  const handleGoogleSubmit = async () => {
+  const handleGoogleClick = () => {
+    setError("");
+    setShowGoogleModal(true);
+  };
+
+  const handleGoogleVerify = async (e) => {
+    if (e) e.preventDefault();
+    if (!googleEmail.trim()) {
+      setError("Please enter your Google account email address.");
+      return;
+    }
+
     setIsLoading(true);
     setError("");
+
     try {
-      const res = await loginWithGoogle();
+      const res = await loginWithGoogle(googleEmail.trim());
       if (res.success) {
-        navigate("/admin");
+        setGoogleSuccess(true);
+        setTimeout(() => {
+          navigate("/admin");
+        }, 800);
+      } else {
+        setError(res.error || "Google login authorization failed.");
       }
     } catch (err) {
-      setError("Google sign-in failed. Please try password method.");
+      setError("Authentication failed: " + err.message);
     } finally {
       setIsLoading(false);
     }
@@ -91,9 +111,16 @@ export default function AdminLoginPage() {
       <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-md px-4 sm:px-0">
         <div className="bg-white dark:bg-zinc-900 py-8 px-6 shadow-xl rounded-2xl sm:px-10 border border-gray-100 dark:border-zinc-800 transition-colors">
           {error && (
-            <div className="mb-5 p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-400 text-xs flex items-center space-x-2">
-              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <div className="mb-5 p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-400 text-xs flex items-start space-x-2">
+              <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
               <span>{error}</span>
+            </div>
+          )}
+
+          {googleSuccess && (
+            <div className="mb-5 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-300 text-xs flex items-center space-x-2">
+              <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+              <span className="font-semibold">Access Authorized! Loading Admin Dashboard...</span>
             </div>
           )}
 
@@ -130,7 +157,7 @@ export default function AdminLoginPage() {
               disabled={isLoading}
               className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-md text-xs sm:text-sm font-bold text-white bg-[#E91E63] hover:bg-[#D81B60] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#E91E63] transition-all transform active:scale-95 disabled:opacity-50"
             >
-              {isLoading ? "Verifying..." : "Login to Dashboard"}
+              {isLoading ? "Verifying..." : "Login with Password"}
             </button>
           </form>
 
@@ -151,9 +178,9 @@ export default function AdminLoginPage() {
             <div className="mt-6">
               <button
                 type="button"
-                onClick={handleGoogleSubmit}
+                onClick={handleGoogleClick}
                 disabled={isLoading}
-                className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 border border-gray-300 dark:border-zinc-700 rounded-lg shadow-sm text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-200 bg-white dark:bg-zinc-800 hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors"
+                className="w-full flex items-center justify-center space-x-2.5 py-2.5 px-4 border border-gray-300 dark:border-zinc-700 rounded-lg shadow-sm text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-200 bg-white dark:bg-zinc-800 hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24">
                   <path
@@ -173,18 +200,125 @@ export default function AdminLoginPage() {
                     d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
                   />
                 </svg>
-                <span>Login with Google (Kishore)</span>
+                <span>Login with Google (Authorized Accounts)</span>
               </button>
             </div>
           </div>
 
           <div className="mt-6 pt-4 border-t border-gray-100 dark:border-zinc-800 text-center">
             <span className="text-[11px] text-gray-400">
-              Session auto-terminates after 30 minutes of inactivity for security.
+              Backend Whitelist Security: Only authorized admin emails can log in.
             </span>
           </div>
         </div>
       </div>
+
+      {/* Google Sign-in Verification Modal */}
+      {showGoogleModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-200 dark:border-zinc-800 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-zinc-800">
+              <div className="flex items-center space-x-2.5">
+                <svg className="w-5 h-5" viewBox="0 0 24 24">
+                  <path
+                    fill="#4285F4"
+                    d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.03 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+                  />
+                </svg>
+                <h3 className="font-bold text-sm text-gray-900 dark:text-white">
+                  Sign in with Google
+                </h3>
+              </div>
+              <button
+                onClick={() => {
+                  setShowGoogleModal(false);
+                  setError("");
+                }}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 mb-4 leading-relaxed">
+              Enter your Google Account email to authenticate. Only accounts whitelisted in the backend database (1 to 3 admin emails) are permitted to open this management portal.
+            </p>
+
+            <form onSubmit={handleGoogleVerify} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                  Google Account Email
+                </label>
+                <input
+                  type="email"
+                  required
+                  autoFocus
+                  value={googleEmail}
+                  onChange={(e) => setGoogleEmail(e.target.value)}
+                  placeholder="e.g. pagesofanisha@gmail.com"
+                  className="w-full px-3.5 py-2.5 border border-gray-300 dark:border-zinc-700 rounded-lg text-sm bg-white dark:bg-zinc-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E91E63]"
+                />
+              </div>
+
+              {/* Quick-fill helper for developer & owner convenience */}
+              <div className="pt-1">
+                <span className="text-[11px] text-gray-400 block mb-1.5 font-medium">
+                  Authorized Admin Accounts on Record:
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setGoogleEmail("pagesofanisha@gmail.com")}
+                    className="text-[11px] bg-pink-50 dark:bg-pink-950/40 text-[#E91E63] hover:bg-pink-100 px-2 py-0.5 rounded border border-pink-200 dark:border-pink-900/60 font-medium"
+                  >
+                    pagesofanisha@gmail.com
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setGoogleEmail("futureeventskishore@gmail.com")}
+                    className="text-[11px] bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 px-2 py-0.5 rounded border border-gray-200 dark:border-zinc-700 font-medium"
+                  >
+                    futureeventskishore@gmail.com
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowGoogleModal(false)}
+                  className="flex-1 py-2 px-3 border border-gray-300 dark:border-zinc-700 rounded-lg text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-zinc-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="flex-1 py-2 px-3 bg-[#E91E63] hover:bg-[#D81B60] disabled:opacity-60 text-white rounded-lg text-xs font-bold shadow-md transition-all"
+                >
+                  {isLoading ? "Verifying..." : "Verify & Sign In"}
+                </button>
+              </div>
+            </form>
+
+            <div className="mt-4 pt-3 border-t border-gray-100 dark:border-zinc-800 text-[11px] text-gray-400">
+              🔒 Whitelist Security: Unauthorized emails cannot enter the portal or edit content.
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -377,18 +377,36 @@ export async function updateSettings(data) {
 // AUTH & PASSWORD MANAGEMENT
 // -------------------------------------------------------------
 export async function getAuthCredentials() {
+  let authData = null;
   if (isFirebaseConfigured && db) {
     try {
       const docRef = doc(db, "auth", "future_events_chennai");
       const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) return docSnap.data();
-      await setDoc(docRef, initialAuthData);
-      return initialAuthData;
+      if (docSnap.exists()) {
+        authData = docSnap.data();
+      } else {
+        await setDoc(docRef, initialAuthData);
+        authData = initialAuthData;
+      }
     } catch (err) {
       console.warn("Firestore auth read failed, using local:", err);
     }
   }
-  return getLocalItem(STORAGE_KEYS.AUTH, initialAuthData);
+
+  if (!authData) {
+    authData = getLocalItem(STORAGE_KEYS.AUTH, initialAuthData);
+  }
+
+  // Ensure allowedEmails is initialized with defaults if missing
+  if (!authData.allowedEmails || !Array.isArray(authData.allowedEmails) || authData.allowedEmails.length === 0) {
+    authData.allowedEmails = initialAuthData.allowedEmails || [
+      "pagesofanisha@gmail.com",
+      "futureeventskishore@gmail.com"
+    ];
+    setLocalItem(STORAGE_KEYS.AUTH, authData);
+  }
+
+  return authData;
 }
 
 export async function updateAdminPassword(newPassword) {
@@ -409,4 +427,68 @@ export async function updateAdminPassword(newPassword) {
   }
   setLocalItem(STORAGE_KEYS.AUTH, updated);
   return true;
+}
+
+export async function updateAllowedEmails(emailsArray) {
+  const authData = await getAuthCredentials();
+  // Filter, trim, lowercase, unique, limit to 3 emails
+  const cleanEmails = Array.from(
+    new Set(
+      emailsArray
+        .map((e) => (e || "").trim().toLowerCase())
+        .filter((e) => e.length > 3 && e.includes("@"))
+    )
+  ).slice(0, 3);
+
+  const updated = {
+    ...authData,
+    allowedEmails: cleanEmails,
+    lastChanged: new Date().toISOString()
+  };
+
+  if (isFirebaseConfigured && db) {
+    try {
+      const docRef = doc(db, "auth", "future_events_chennai");
+      await setDoc(docRef, updated, { merge: true });
+    } catch (err) {
+      console.warn("Firestore allowed emails update error:", err);
+    }
+  }
+  setLocalItem(STORAGE_KEYS.AUTH, updated);
+  return cleanEmails;
+}
+
+// -------------------------------------------------------------
+// DATABASE INSPECTOR & EXPORT
+// -------------------------------------------------------------
+export async function getAllDatabaseData() {
+  const [business, contact, albums, reviews, settings, auth] = await Promise.all([
+    getBusinessInfo(),
+    getContactInfo(),
+    getAlbums(),
+    getReviews(),
+    getSettings(),
+    getAuthCredentials()
+  ]);
+
+  // Mask sensitive password before returning
+  const safeAuth = {
+    ...auth,
+    adminPassword: "•••••••••••• (Encrypted in database)"
+  };
+
+  return {
+    meta: {
+      businessName: business.businessName || "Future Event Organization",
+      exportedAt: new Date().toISOString(),
+      storageEngine: isFirebaseConfigured ? "Firebase Cloud Firestore + Cloud Storage" : "Browser Local Persistence Engine (LocalStorage)",
+      collectionsCount: 6
+    },
+    business,
+    contact,
+    albums,
+    reviews,
+    settings,
+    auth: safeAuth
+  };
 }

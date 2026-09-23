@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Lock,
   Eye,
@@ -9,16 +9,62 @@ import {
   Sun,
   Bell,
   Sliders,
-  ShieldCheck
+  ShieldCheck,
+  Mail
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { useData } from "../../context/DataContext";
 
 export default function SettingsManager() {
-  const { changePassword } = useAuth();
+  const { changePassword, getAllowedEmails, saveAllowedEmails } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
   const { settings, updateSettings } = useData();
+
+  // Allowed Google Emails State (Whitelist)
+  const [email1, setEmail1] = useState("");
+  const [email2, setEmail2] = useState("");
+  const [email3, setEmail3] = useState("");
+  const [emailsSuccess, setEmailsSuccess] = useState(false);
+  const [emailsError, setEmailsError] = useState("");
+  const [isSavingEmails, setIsSavingEmails] = useState(false);
+
+  useEffect(() => {
+    async function loadEmails() {
+      if (getAllowedEmails) {
+        const emails = await getAllowedEmails();
+        if (emails && emails.length > 0) {
+          setEmail1(emails[0] || "");
+          setEmail2(emails[1] || "");
+          setEmail3(emails[2] || "");
+        }
+      }
+    }
+    loadEmails();
+  }, []);
+
+  const handleSaveEmails = async (e) => {
+    e.preventDefault();
+    setIsSavingEmails(true);
+    setEmailsError("");
+    setEmailsSuccess(false);
+
+    try {
+      const emailList = [email1, email2, email3].filter((e) => e && e.trim().length > 0);
+      if (emailList.length === 0) {
+        setEmailsError("At least one authorized Google email must be configured.");
+        setIsSavingEmails(false);
+        return;
+      }
+      await saveAllowedEmails(emailList);
+      setEmailsSuccess(true);
+      setTimeout(() => setEmailsSuccess(false), 4000);
+    } catch (err) {
+      setEmailsError("Failed to save authorized emails: " + err.message);
+    } finally {
+      setIsSavingEmails(false);
+    }
+  };
 
   // Password fields state (all hidden with dots/asterisks by default)
   const [currentPassword, setCurrentPassword] = useState("");
@@ -87,6 +133,89 @@ export default function SettingsManager() {
 
   return (
     <div className="space-y-6">
+      {/* 0. Authorized Admin Emails (Google Login Whitelist) */}
+      <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 sm:p-8 border border-gray-100 dark:border-zinc-800 shadow-sm transition-colors">
+        <div className="flex items-center space-x-2.5 pb-4 mb-4 border-b border-gray-100 dark:border-zinc-800">
+          <Mail className="w-5 h-5 text-[#E91E63]" />
+          <div>
+            <h2 className="text-base font-bold text-gray-900 dark:text-white">
+              Authorized Admin Google Accounts (Whitelist Security)
+            </h2>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Only up to 3 authorized Google emails entered here can log in via &quot;Login with Google&quot;. You can set your developer email now, and update it to the client&apos;s email upon handover.
+            </p>
+          </div>
+        </div>
+
+        {emailsSuccess && (
+          <div className="mb-4 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 text-emerald-700 dark:text-emerald-300 text-xs flex items-center space-x-2">
+            <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+            <span>Authorized admin emails saved permanently to backend database!</span>
+          </div>
+        )}
+
+        {emailsError && (
+          <div className="mb-4 p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 text-red-700 dark:text-red-300 text-xs flex items-center space-x-2">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <span>{emailsError}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleSaveEmails} className="space-y-4 max-w-lg text-xs">
+          <div>
+            <label className="block text-gray-700 dark:text-gray-300 font-semibold mb-1">
+              Primary Admin Email <span className="text-[#E91E63]">*</span>
+              <span className="text-[11px] text-gray-400 ml-1.5 font-normal">(Developer / Current Admin)</span>
+            </label>
+            <input
+              type="email"
+              required
+              value={email1}
+              onChange={(e) => setEmail1(e.target.value)}
+              placeholder="e.g. pagesofanisha@gmail.com"
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white focus:outline-none focus:border-[#E91E63]"
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-700 dark:text-gray-300 font-semibold mb-1">
+              Secondary Admin Email <span className="text-gray-400 font-normal">(Optional)</span>
+              <span className="text-[11px] text-gray-400 ml-1.5 font-normal">(Kishore / Client account)</span>
+            </label>
+            <input
+              type="email"
+              value={email2}
+              onChange={(e) => setEmail2(e.target.value)}
+              placeholder="e.g. futureeventskishore@gmail.com"
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white focus:outline-none focus:border-[#E91E63]"
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-700 dark:text-gray-300 font-semibold mb-1">
+              Backup / Third Admin Email <span className="text-gray-400 font-normal">(Optional)</span>
+            </label>
+            <input
+              type="email"
+              value={email3}
+              onChange={(e) => setEmail3(e.target.value)}
+              placeholder="e.g. backup-admin@gmail.com"
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white focus:outline-none focus:border-[#E91E63]"
+            />
+          </div>
+
+          <div className="pt-1">
+            <button
+              type="submit"
+              disabled={isSavingEmails}
+              className="bg-[#E91E63] hover:bg-[#D81B60] disabled:opacity-60 text-white font-bold px-5 py-2.5 rounded-xl shadow-md transition-transform active:scale-95 text-xs"
+            >
+              {isSavingEmails ? "Saving to Backend..." : "Save Authorized Admin Emails"}
+            </button>
+          </div>
+        </form>
+      </div>
+
       {/* 1. Change Backend Password Card */}
       <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 sm:p-8 border border-gray-100 dark:border-zinc-800 shadow-sm transition-colors">
         <div className="flex items-center space-x-2.5 pb-4 mb-4 border-b border-gray-100 dark:border-zinc-800">
