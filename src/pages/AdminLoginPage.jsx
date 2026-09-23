@@ -200,14 +200,14 @@ export default function AdminLoginPage() {
                     d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
                   />
                 </svg>
-                <span>Login with Google (Authorized Accounts)</span>
+                <span>Login with Google</span>
               </button>
             </div>
           </div>
 
           <div className="mt-6 pt-4 border-t border-gray-100 dark:border-zinc-800 text-center">
             <span className="text-[11px] text-gray-400">
-              Backend Whitelist Security: Only authorized admin emails can log in.
+              Admin Security Protected.
             </span>
           </div>
         </div>
@@ -253,7 +253,7 @@ export default function AdminLoginPage() {
             </div>
 
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 mb-4 leading-relaxed">
-              Enter your Google Account email to authenticate. Only accounts whitelisted in the backend database (1 to 3 admin emails) are permitted to open this management portal.
+              Enter your Google Account email to authenticate administrative access.
             </p>
 
             <form onSubmit={handleGoogleVerify} className="space-y-4">
@@ -267,32 +267,9 @@ export default function AdminLoginPage() {
                   autoFocus
                   value={googleEmail}
                   onChange={(e) => setGoogleEmail(e.target.value)}
-                  placeholder="e.g. pagesofanisha@gmail.com"
+                  placeholder="Enter your Google account email"
                   className="w-full px-3.5 py-2.5 border border-gray-300 dark:border-zinc-700 rounded-lg text-sm bg-white dark:bg-zinc-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E91E63]"
                 />
-              </div>
-
-              {/* Quick-fill helper for developer & owner convenience */}
-              <div className="pt-1">
-                <span className="text-[11px] text-gray-400 block mb-1.5 font-medium">
-                  Authorized Admin Accounts on Record:
-                </span>
-                <div className="flex flex-wrap gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => setGoogleEmail("pagesofanisha@gmail.com")}
-                    className="text-[11px] bg-pink-50 dark:bg-pink-950/40 text-[#E91E63] hover:bg-pink-100 px-2 py-0.5 rounded border border-pink-200 dark:border-pink-900/60 font-medium"
-                  >
-                    pagesofanisha@gmail.com
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setGoogleEmail("futureeventskishore@gmail.com")}
-                    className="text-[11px] bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 px-2 py-0.5 rounded border border-gray-200 dark:border-zinc-700 font-medium"
-                  >
-                    futureeventskishore@gmail.com
-                  </button>
-                </div>
               </div>
 
               <div className="flex items-center space-x-2 pt-2">
@@ -314,7 +291,7 @@ export default function AdminLoginPage() {
             </form>
 
             <div className="mt-4 pt-3 border-t border-gray-100 dark:border-zinc-800 text-[11px] text-gray-400">
-              🔒 Whitelist Security: Unauthorized emails cannot enter the portal or edit content.
+              🔒 Secure Authentication: Unauthorized accounts cannot access the management portal.
             </div>
           </div>
         </div>
