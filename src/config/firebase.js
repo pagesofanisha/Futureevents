@@ -4,12 +4,12 @@ import { getStorage } from "firebase/storage";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyAprTUvKxuYRfQhLKbJgqS0LtdbsDL0UPA",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "future-events-kishore.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "future-events-kishore",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "future-events-kishore.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "638394322374",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:638394322374:web:e3fdee2721281d39bbb6c7"
 };
 
 export const isFirebaseConfigured = Boolean(
