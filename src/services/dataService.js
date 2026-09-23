@@ -48,6 +48,30 @@ function setLocalItem(key, value) {
   }
 }
 
+// Helper: Timeout for Firestore reads to avoid hanging on unprovisioned databases
+function withTimeout(promise, ms = 800) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Firestore read timeout")), ms)
+    )
+  ]);
+}
+
+// Helper: Fire-and-forget background sync to Firestore (capped at 1200ms)
+function safeFirestoreSync(fn) {
+  if (isFirebaseConfigured && db) {
+    Promise.race([
+      fn(),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Firestore sync timeout")), 1200)
+      )
+    ]).catch((err) => {
+      console.warn("Firestore sync skipped or timed out:", err.message);
+    });
+  }
+}
+
 // -------------------------------------------------------------
 // BUSINESS INFO
 // -------------------------------------------------------------
@@ -55,13 +79,10 @@ export async function getBusinessInfo() {
   if (isFirebaseConfigured && db) {
     try {
       const docRef = doc(db, "businesses", "future_events_chennai");
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) return docSnap.data();
-      // If not yet written to Firestore, seed it
-      await setDoc(docRef, initialBusinessData);
-      return initialBusinessData;
+      const docSnap = await withTimeout(getDoc(docRef), 800);
+      if (docSnap && docSnap.exists()) return docSnap.data();
     } catch (err) {
-      console.warn("Firestore read failed, using local:", err);
+      // Quiet fallback to persistent local cache
     }
   }
   const biz = getLocalItem(STORAGE_KEYS.BUSINESS, initialBusinessData);
@@ -74,15 +95,13 @@ export async function getBusinessInfo() {
 
 export async function updateBusinessInfo(data) {
   const updated = { ...data, updatedDate: new Date().toISOString() };
-  if (isFirebaseConfigured && db) {
-    try {
-      const docRef = doc(db, "businesses", "future_events_chennai");
-      await setDoc(docRef, updated, { merge: true });
-    } catch (err) {
-      console.warn("Firestore update error:", err);
-    }
-  }
   setLocalItem(STORAGE_KEYS.BUSINESS, updated);
+
+  safeFirestoreSync(async () => {
+    const docRef = doc(db, "businesses", "future_events_chennai");
+    await setDoc(docRef, updated, { merge: true });
+  });
+
   return updated;
 }
 
@@ -93,12 +112,10 @@ export async function getContactInfo() {
   if (isFirebaseConfigured && db) {
     try {
       const docRef = doc(db, "contactInfo", "future_events_chennai");
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) return docSnap.data();
-      await setDoc(docRef, initialContactData);
-      return initialContactData;
+      const docSnap = await withTimeout(getDoc(docRef), 800);
+      if (docSnap && docSnap.exists()) return docSnap.data();
     } catch (err) {
-      console.warn("Firestore read failed, using local:", err);
+      // Fallback
     }
   }
   return getLocalItem(STORAGE_KEYS.CONTACT, initialContactData);
@@ -106,15 +123,13 @@ export async function getContactInfo() {
 
 export async function updateContactInfo(data) {
   const updated = { ...data, updatedDate: new Date().toISOString() };
-  if (isFirebaseConfigured && db) {
-    try {
-      const docRef = doc(db, "contactInfo", "future_events_chennai");
-      await setDoc(docRef, updated, { merge: true });
-    } catch (err) {
-      console.warn("Firestore update error:", err);
-    }
-  }
   setLocalItem(STORAGE_KEYS.CONTACT, updated);
+
+  safeFirestoreSync(async () => {
+    const docRef = doc(db, "contactInfo", "future_events_chennai");
+    await setDoc(docRef, updated, { merge: true });
+  });
+
   return updated;
 }
 
@@ -125,17 +140,12 @@ export async function getAlbums() {
   if (isFirebaseConfigured && db) {
     try {
       const colRef = collection(db, "albums", "future_events_chennai", "items");
-      const snap = await getDocs(colRef);
-      if (!snap.empty) {
+      const snap = await withTimeout(getDocs(colRef), 800);
+      if (snap && !snap.empty) {
         return snap.docs.map(d => ({ id: d.id, ...d.data() }));
       }
-      // Seed Firestore with initial albums
-      for (const alb of initialAlbumsData) {
-        await setDoc(doc(db, "albums", "future_events_chennai", "items", alb.id), alb);
-      }
-      return initialAlbumsData;
     } catch (err) {
-      console.warn("Firestore read failed, using local:", err);
+      // Fallback
     }
   }
   return getLocalItem(STORAGE_KEYS.ALBUMS, initialAlbumsData);
@@ -155,15 +165,12 @@ export async function createAlbum(albumData) {
   };
 
   const updatedAlbums = [newAlbum, ...albums];
-
-  if (isFirebaseConfigured && db) {
-    try {
-      await setDoc(doc(db, "albums", "future_events_chennai", "items", newAlbum.id), newAlbum);
-    } catch (err) {
-      console.warn("Firestore create album error:", err);
-    }
-  }
   setLocalItem(STORAGE_KEYS.ALBUMS, updatedAlbums);
+
+  safeFirestoreSync(async () => {
+    await setDoc(doc(db, "albums", "future_events_chennai", "items", newAlbum.id), newAlbum);
+  });
+
   return newAlbum;
 }
 
@@ -183,32 +190,27 @@ export async function updateAlbum(albumId, data) {
     return a;
   });
 
-  if (isFirebaseConfigured && db) {
-    try {
-      const found = updatedAlbums.find(a => a.id === albumId);
-      if (found) {
-        await setDoc(doc(db, "albums", "future_events_chennai", "items", albumId), found, { merge: true });
-      }
-    } catch (err) {
-      console.warn("Firestore update album error:", err);
-    }
-  }
   setLocalItem(STORAGE_KEYS.ALBUMS, updatedAlbums);
+
+  safeFirestoreSync(async () => {
+    const found = updatedAlbums.find(a => a.id === albumId);
+    if (found) {
+      await setDoc(doc(db, "albums", "future_events_chennai", "items", albumId), found, { merge: true });
+    }
+  });
+
   return updatedAlbums;
 }
 
 export async function deleteAlbum(albumId) {
   const albums = await getAlbums();
   const updatedAlbums = albums.filter(a => a.id !== albumId);
-
-  if (isFirebaseConfigured && db) {
-    try {
-      await deleteDoc(doc(db, "albums", "future_events_chennai", "items", albumId));
-    } catch (err) {
-      console.warn("Firestore delete album error:", err);
-    }
-  }
   setLocalItem(STORAGE_KEYS.ALBUMS, updatedAlbums);
+
+  safeFirestoreSync(async () => {
+    await deleteDoc(doc(db, "albums", "future_events_chennai", "items", albumId));
+  });
+
   return updatedAlbums;
 }
 
@@ -258,16 +260,12 @@ export async function getReviews() {
   if (isFirebaseConfigured && db) {
     try {
       const colRef = collection(db, "reviews", "future_events_chennai", "items");
-      const snap = await getDocs(colRef);
-      if (!snap.empty) {
+      const snap = await withTimeout(getDocs(colRef), 800);
+      if (snap && !snap.empty) {
         return snap.docs.map(d => ({ id: d.id, ...d.data() }));
       }
-      for (const rev of initialReviewsData) {
-        await setDoc(doc(db, "reviews", "future_events_chennai", "items", rev.id), rev);
-      }
-      return initialReviewsData;
     } catch (err) {
-      console.warn("Firestore read reviews failed, using local:", err);
+      // Fallback
     }
   }
   return getLocalItem(STORAGE_KEYS.REVIEWS, initialReviewsData);
@@ -291,15 +289,12 @@ export async function addCustomerReview(reviewInput) {
   };
 
   const updatedReviews = [newReview, ...reviews];
-
-  if (isFirebaseConfigured && db) {
-    try {
-      await setDoc(doc(db, "reviews", "future_events_chennai", "items", newReview.id), newReview);
-    } catch (err) {
-      console.warn("Firestore add review error:", err);
-    }
-  }
   setLocalItem(STORAGE_KEYS.REVIEWS, updatedReviews);
+
+  safeFirestoreSync(async () => {
+    await setDoc(doc(db, "reviews", "future_events_chennai", "items", newReview.id), newReview);
+  });
+
   return newReview;
 }
 
@@ -312,32 +307,27 @@ export async function updateReview(reviewId, updateData) {
     return r;
   });
 
-  if (isFirebaseConfigured && db) {
-    try {
-      const found = updatedReviews.find(r => r.id === reviewId);
-      if (found) {
-        await setDoc(doc(db, "reviews", "future_events_chennai", "items", reviewId), found, { merge: true });
-      }
-    } catch (err) {
-      console.warn("Firestore update review error:", err);
-    }
-  }
   setLocalItem(STORAGE_KEYS.REVIEWS, updatedReviews);
+
+  safeFirestoreSync(async () => {
+    const found = updatedReviews.find(r => r.id === reviewId);
+    if (found) {
+      await setDoc(doc(db, "reviews", "future_events_chennai", "items", reviewId), found, { merge: true });
+    }
+  });
+
   return updatedReviews;
 }
 
 export async function deleteReview(reviewId) {
   const reviews = await getReviews();
   const updatedReviews = reviews.filter(r => r.id !== reviewId);
-
-  if (isFirebaseConfigured && db) {
-    try {
-      await deleteDoc(doc(db, "reviews", "future_events_chennai", "items", reviewId));
-    } catch (err) {
-      console.warn("Firestore delete review error:", err);
-    }
-  }
   setLocalItem(STORAGE_KEYS.REVIEWS, updatedReviews);
+
+  safeFirestoreSync(async () => {
+    await deleteDoc(doc(db, "reviews", "future_events_chennai", "items", reviewId));
+  });
+
   return updatedReviews;
 }
 
@@ -348,12 +338,10 @@ export async function getSettings() {
   if (isFirebaseConfigured && db) {
     try {
       const docRef = doc(db, "settings", "future_events_chennai");
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) return docSnap.data();
-      await setDoc(docRef, initialSettingsData);
-      return initialSettingsData;
+      const docSnap = await withTimeout(getDoc(docRef), 800);
+      if (docSnap && docSnap.exists()) return docSnap.data();
     } catch (err) {
-      console.warn("Firestore settings read failed, using local:", err);
+      // Fallback
     }
   }
   return getLocalItem(STORAGE_KEYS.SETTINGS, initialSettingsData);
@@ -361,15 +349,13 @@ export async function getSettings() {
 
 export async function updateSettings(data) {
   const updated = { ...data, updatedDate: new Date().toISOString() };
-  if (isFirebaseConfigured && db) {
-    try {
-      const docRef = doc(db, "settings", "future_events_chennai");
-      await setDoc(docRef, updated, { merge: true });
-    } catch (err) {
-      console.warn("Firestore settings update error:", err);
-    }
-  }
   setLocalItem(STORAGE_KEYS.SETTINGS, updated);
+
+  safeFirestoreSync(async () => {
+    const docRef = doc(db, "settings", "future_events_chennai");
+    await setDoc(docRef, updated, { merge: true });
+  });
+
   return updated;
 }
 
@@ -381,15 +367,12 @@ export async function getAuthCredentials() {
   if (isFirebaseConfigured && db) {
     try {
       const docRef = doc(db, "auth", "future_events_chennai");
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
+      const docSnap = await withTimeout(getDoc(docRef), 800);
+      if (docSnap && docSnap.exists()) {
         authData = docSnap.data();
-      } else {
-        await setDoc(docRef, initialAuthData);
-        authData = initialAuthData;
       }
     } catch (err) {
-      console.warn("Firestore auth read failed, using local:", err);
+      // Fallback
     }
   }
 
@@ -417,21 +400,18 @@ export async function updateAdminPassword(newPassword) {
     lastChanged: new Date().toISOString()
   };
 
-  if (isFirebaseConfigured && db) {
-    try {
-      const docRef = doc(db, "auth", "future_events_chennai");
-      await setDoc(docRef, updated, { merge: true });
-    } catch (err) {
-      console.warn("Firestore auth update error:", err);
-    }
-  }
   setLocalItem(STORAGE_KEYS.AUTH, updated);
+
+  safeFirestoreSync(async () => {
+    const docRef = doc(db, "auth", "future_events_chennai");
+    await setDoc(docRef, updated, { merge: true });
+  });
+
   return true;
 }
 
 export async function updateAllowedEmails(emailsArray) {
   const authData = await getAuthCredentials();
-  // Filter, trim, lowercase, unique, limit to 3 emails
   const cleanEmails = Array.from(
     new Set(
       emailsArray
@@ -446,15 +426,13 @@ export async function updateAllowedEmails(emailsArray) {
     lastChanged: new Date().toISOString()
   };
 
-  if (isFirebaseConfigured && db) {
-    try {
-      const docRef = doc(db, "auth", "future_events_chennai");
-      await setDoc(docRef, updated, { merge: true });
-    } catch (err) {
-      console.warn("Firestore allowed emails update error:", err);
-    }
-  }
   setLocalItem(STORAGE_KEYS.AUTH, updated);
+
+  safeFirestoreSync(async () => {
+    const docRef = doc(db, "auth", "future_events_chennai");
+    await setDoc(docRef, updated, { merge: true });
+  });
+
   return cleanEmails;
 }
 
