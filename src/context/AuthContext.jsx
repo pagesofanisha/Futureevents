@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import { getAuthCredentials, updateAdminPassword, updateAllowedEmails } from "../services/dataService";
-import { auth, isFirebaseConfigured } from "../config/firebase";
-import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { auth } from "../config/firebase";
 
 const AuthContext = createContext();
 
@@ -13,9 +12,14 @@ export function AuthProvider({ children }) {
     try {
       const token = localStorage.getItem("future_events_admin_token");
       const expiry = localStorage.getItem("future_events_admin_expiry");
-      if (token && expiry && Number(expiry) > Date.now()) {
+      // STRICT: Only genuine password-authenticated tokens are valid
+      if (token && token.startsWith("admin_authenticated_") && expiry && Number(expiry) > Date.now()) {
         return true;
       }
+      // Purge any old google tokens or expired sessions
+      localStorage.removeItem("future_events_admin_token");
+      localStorage.removeItem("future_events_admin_expiry");
+      localStorage.removeItem("future_events_admin_user");
       return false;
     } catch {
       return false;
@@ -24,6 +28,10 @@ export function AuthProvider({ children }) {
 
   const [adminUser, setAdminUser] = useState(() => {
     try {
+      const token = localStorage.getItem("future_events_admin_token");
+      if (!token || !token.startsWith("admin_authenticated_")) {
+        return null;
+      }
       const savedUser = localStorage.getItem("future_events_admin_user");
       return savedUser ? JSON.parse(savedUser) : null;
     } catch {
@@ -61,56 +69,23 @@ export function AuthProvider({ children }) {
     };
   }, [isAdminLoggedIn]);
 
-  // Firebase Auth State Listener: Auto-detect Google sign-in and authorize automatically
+  // Clean up any lingering Firebase Auth sessions on mount
   useEffect(() => {
-    if (!isFirebaseConfigured || !auth) return;
-
-    try {
-      const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
-        if (firebaseUser && firebaseUser.email) {
-          const email = firebaseUser.email.trim().toLowerCase();
-          const creds = await getAuthCredentials();
-          const defaultAllowed = ["pagesofanisha@gmail.com", "futureeventskishore@gmail.com"];
-          const customAllowed = Array.isArray(creds?.allowedEmails) ? creds.allowedEmails : [];
-          const allowed = Array.from(new Set([...defaultAllowed, ...customAllowed])).map((e) => e.trim().toLowerCase());
-
-          if (allowed.includes(email)) {
-            const expiry = Date.now() + INACTIVITY_TIMEOUT_MS;
-            localStorage.setItem("future_events_admin_token", "google_oauth_" + Date.now());
-            localStorage.setItem("future_events_admin_expiry", expiry.toString());
-            const user = {
-              name: firebaseUser.displayName || email.split("@")[0].replace(/[._-]/g, " "),
-              email: email,
-              role: "Owner / Administrator",
-              loginMethod: "google",
-              verified: true
-            };
-            localStorage.setItem("future_events_admin_user", JSON.stringify(user));
-            setIsAdminLoggedIn(true);
-            setAdminUser(user);
-          } else {
-            // Unauthorized Google account detected - force sign-out immediately
-            try {
-              await auth.signOut();
-            } catch (e) {
-              // Ignore
-            }
-            localStorage.removeItem("future_events_admin_token");
-            localStorage.removeItem("future_events_admin_expiry");
-            localStorage.removeItem("future_events_admin_user");
-            setIsAdminLoggedIn(false);
-            setAdminUser(null);
-          }
-        }
-      });
-      return () => unsubscribe();
-    } catch (err) {
-      console.warn("onAuthStateChanged setup warning:", err);
+    if (auth) {
+      try {
+        auth.signOut();
+      } catch (e) {
+        // Ignore
+      }
     }
   }, []);
 
-  // Method 1: Password Login
+  // Strict Password-Only Login
   const loginWithPassword = async (enteredPassword) => {
+    if (!enteredPassword || !enteredPassword.trim()) {
+      return { success: false, error: "Please enter the admin password." };
+    }
+
     const creds = await getAuthCredentials();
     const correctPassword = creds.adminPassword || "Futureeventskishore2026";
 
@@ -128,85 +103,17 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Method 2: Google Sign-In with Strict Whitelist Verification
-  // The email MUST come directly from Google OAuth authentication.
-  const loginWithGoogle = async () => {
-    if (!isFirebaseConfigured || !auth) {
-      return {
-        success: false,
-        error: "Google Authentication is not configured in Firebase Console."
-      };
-    }
-
-    try {
-      const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({ prompt: "select_account" });
-      const result = await signInWithPopup(auth, provider);
-
-      if (!result || !result.user || !result.user.email) {
-        return {
-          success: false,
-          error: "Could not retrieve account details from Google. Please try again."
-        };
-      }
-
-      const emailToVerify = result.user.email.trim().toLowerCase();
-
-      // Fetch allowed admin emails from database
-      const creds = await getAuthCredentials();
-      const defaultAllowed = ["pagesofanisha@gmail.com", "futureeventskishore@gmail.com"];
-      const customAllowed = Array.isArray(creds?.allowedEmails) ? creds.allowedEmails : [];
-      const allowed = Array.from(new Set([...defaultAllowed, ...customAllowed])).map((e) => e.trim().toLowerCase());
-
-      // STRICT VERIFICATION: If the selected Google email is not in the whitelist, reject & kick out immediately!
-      if (!allowed.includes(emailToVerify)) {
-        try {
-          await auth.signOut();
-        } catch (e) {
-          // Ignore
-        }
-        localStorage.removeItem("future_events_admin_token");
-        localStorage.removeItem("future_events_admin_expiry");
-        localStorage.removeItem("future_events_admin_user");
-        setIsAdminLoggedIn(false);
-        setAdminUser(null);
-
-        return {
-          success: false,
-          error: `Access Denied: "${emailToVerify}" is not an authorized administrator. Only registered owner accounts (such as Kishore) can access this workspace.`
-        };
-      }
-
-      // Success! Verified authorized administrator
-      const expiry = Date.now() + INACTIVITY_TIMEOUT_MS;
-      localStorage.setItem("future_events_admin_token", "google_oauth_" + Date.now());
-      localStorage.setItem("future_events_admin_expiry", expiry.toString());
-      const user = {
-        name: result.user.displayName || emailToVerify.split("@")[0].replace(/[._-]/g, " "),
-        email: emailToVerify,
-        role: "Owner / Administrator",
-        loginMethod: "google",
-        verified: true
-      };
-      localStorage.setItem("future_events_admin_user", JSON.stringify(user));
-      setIsAdminLoggedIn(true);
-      setAdminUser(user);
-      return { success: true, user };
-    } catch (err) {
-      if (err.code === "auth/popup-closed-by-user" || err.code === "auth/cancelled-popup-request") {
-        return { success: false, error: "Google sign-in popup was closed before completing." };
-      }
-      return {
-        success: false,
-        error: "Google sign-in failed: " + (err.message || "Unknown error")
-      };
-    }
-  };
-
   const logout = () => {
     localStorage.removeItem("future_events_admin_token");
     localStorage.removeItem("future_events_admin_expiry");
     localStorage.removeItem("future_events_admin_user");
+    if (auth) {
+      try {
+        auth.signOut();
+      } catch (e) {
+        // Ignore
+      }
+    }
     setIsAdminLoggedIn(false);
     setAdminUser(null);
   };
@@ -242,7 +149,6 @@ export function AuthProvider({ children }) {
         isAdminLoggedIn,
         adminUser,
         loginWithPassword,
-        loginWithGoogle,
         logout,
         changePassword,
         getAllowedEmails,

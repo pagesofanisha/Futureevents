@@ -11,19 +11,13 @@ import AdminDashboardPage from "./pages/AdminDashboardPage";
 
 // Protected Route Component for Admin Dashboard
 function ProtectedAdminRoute({ children }) {
-  const { isAdminLoggedIn, adminUser, logout } = useAuth();
-  if (!isAdminLoggedIn) {
-    return <Navigate to="/admin/login" replace />;
-  }
+  const { isAdminLoggedIn, logout } = useAuth();
+  const token = localStorage.getItem("future_events_admin_token");
 
-  // Strict email verification for Google logins
-  if (adminUser?.loginMethod === "google") {
-    const email = (adminUser.email || "").trim().toLowerCase();
-    const defaultAllowed = ["pagesofanisha@gmail.com", "futureeventskishore@gmail.com"];
-    if (!email || !defaultAllowed.includes(email)) {
-      logout();
-      return <Navigate to="/admin/login" replace />;
-    }
+  // Only allow valid password-authenticated admin sessions
+  if (!isAdminLoggedIn || !token || !token.startsWith("admin_authenticated_")) {
+    logout();
+    return <Navigate to="/admin/login" replace />;
   }
 
   return children;
