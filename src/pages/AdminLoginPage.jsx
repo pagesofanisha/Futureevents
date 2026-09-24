@@ -22,6 +22,11 @@ export default function AdminLoginPage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  // Ensure password input is completely empty on mount
+  useEffect(() => {
+    setPassword("");
+  }, []);
+
   // Auto-redirect if already logged in or state transitions to logged in
   useEffect(() => {
     if (isAdminLoggedIn) {
@@ -89,7 +94,7 @@ export default function AdminLoginPage() {
           )}
 
           {/* Method 1: Password Login */}
-          <form onSubmit={handlePasswordSubmit} className="space-y-4">
+          <form onSubmit={handlePasswordSubmit} autoComplete="off" className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
                 Admin Password
@@ -100,6 +105,9 @@ export default function AdminLoginPage() {
                 </div>
                 <input
                   type={showPassword ? "text" : "password"}
+                  name="admin_security_key"
+                  id="admin_security_key"
+                  autoComplete="new-password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
