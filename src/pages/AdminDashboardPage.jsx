@@ -40,13 +40,9 @@ function HeaderSyncButton() {
     if (isSyncing) return;
     setIsSyncing(true);
     try {
-      const res = await syncLocalAlbumsToSupabase();
-      if (res && res.success) {
-        setSyncDone(true);
-        setTimeout(() => setSyncDone(false), 5000);
-      } else {
-        alert("Sync warning: " + (res?.error || "Unknown"));
-      }
+      await syncLocalAlbumsToSupabase();
+      setSyncDone(true);
+      setTimeout(() => setSyncDone(false), 5000);
     } catch (err) {
       alert("Sync error: " + err.message);
     } finally {

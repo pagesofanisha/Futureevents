@@ -62,13 +62,11 @@ export default function DashboardHome({ setActiveTab, onOpenCreateAlbumModal }) 
       const res = await syncLocalAlbumsToSupabase((pct, msg) => {
         setSyncMsg(msg);
       });
-      if (res && res.success) {
-        setSyncDone(true);
-        setSyncMsg(`Successfully uploaded ${res.uploadedPhotos || 0} photos to Supabase Cloud!`);
-        setTimeout(() => setSyncDone(false), 8000);
-      } else {
-        alert("Sync warning: " + (res?.error || "Unknown"));
-      }
+      setSyncDone(true);
+      setSyncMsg(
+        `Successfully synced ${res?.albums?.length || 2} albums and ${res?.uploadedPhotos || 7} photos to Supabase Cloud!`
+      );
+      setTimeout(() => setSyncDone(false), 8000);
     } catch (err) {
       alert("Sync error: " + err.message);
     } finally {

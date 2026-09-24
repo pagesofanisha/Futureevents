@@ -629,7 +629,11 @@ export async function syncLocalAlbumsToSupabase(onProgress = null) {
   // Update local cache with cloud URLs
   setLocalItem(STORAGE_KEYS.ALBUMS, updatedAlbums);
   if (onProgress) onProgress(100, `Successfully synced ${updatedAlbums.length} albums and ${processed} photos to Supabase Cloud!`);
-  return updatedAlbums;
+  return {
+    success: true,
+    albums: updatedAlbums,
+    uploadedPhotos: processed
+  };
 }
 
 // -------------------------------------------------------------
