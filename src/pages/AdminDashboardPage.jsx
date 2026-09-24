@@ -14,7 +14,10 @@ import {
   Shield,
   Menu,
   X,
-  Database
+  Database,
+  Cloud,
+  Loader2,
+  Check
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
@@ -27,6 +30,54 @@ import ContactInfoEditor from "../components/admin/ContactInfoEditor";
 import ReviewsManager from "../components/admin/ReviewsManager";
 import SettingsManager from "../components/admin/SettingsManager";
 import DatabaseManager from "../components/admin/DatabaseManager";
+
+function HeaderSyncButton() {
+  const { syncLocalAlbumsToSupabase } = useData();
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncDone, setSyncDone] = useState(false);
+
+  const handleSync = async () => {
+    if (isSyncing) return;
+    setIsSyncing(true);
+    try {
+      const res = await syncLocalAlbumsToSupabase();
+      if (res && res.success) {
+        setSyncDone(true);
+        setTimeout(() => setSyncDone(false), 5000);
+      } else {
+        alert("Sync warning: " + (res?.error || "Unknown"));
+      }
+    } catch (err) {
+      alert("Sync error: " + err.message);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleSync}
+      disabled={isSyncing}
+      className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95 ${
+        syncDone
+          ? "bg-emerald-600 text-white"
+          : "bg-indigo-600 hover:bg-indigo-700 text-white"
+      }`}
+      title="Push all photos & albums from this laptop to Supabase Cloud so they show on phones"
+    >
+      {isSyncing ? (
+        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+      ) : syncDone ? (
+        <Check className="w-3.5 h-3.5" />
+      ) : (
+        <Cloud className="w-3.5 h-3.5" />
+      )}
+      <span className="hidden sm:inline">
+        {isSyncing ? "Syncing..." : syncDone ? "Synced to Cloud!" : "Push to Cloud"}
+      </span>
+    </button>
+  );
+}
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
@@ -93,6 +144,9 @@ export default function AdminDashboardPage() {
               <span>Live Site</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </Link>
+
+            {/* Global Push Photos to Cloud Header Button */}
+            <HeaderSyncButton />
 
             {/* Dark Mode */}
             <button

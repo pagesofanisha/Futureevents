@@ -14,22 +14,66 @@ import {
   CheckCircle2,
   AlertTriangle,
   RefreshCw,
-  ArrowUpRight
+  ArrowUpRight,
+  Loader2,
+  Check
 } from "lucide-react";
 import { useData } from "../../context/DataContext";
 import { isFirebaseConfigured } from "../../config/firebase";
+import { isSupabaseConfigured, supabase } from "../../config/supabase";
 import { checkCloudStatus } from "../../services/dataService";
 
 export default function DashboardHome({ setActiveTab, onOpenCreateAlbumModal }) {
-  const { albums, reviews, businessData, contactData } = useData();
+  const { albums, reviews, businessData, contactData, syncLocalAlbumsToSupabase } = useData();
   const [cloudStatus, setCloudStatus] = useState(null);
   const [isTestingCloud, setIsTestingCloud] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncDone, setSyncDone] = useState(false);
+  const [syncMsg, setSyncMsg] = useState("");
 
   const testConnection = async () => {
     setIsTestingCloud(true);
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { data, error } = await supabase.from("albums").select("id").limit(1);
+        if (!error) {
+          setCloudStatus({
+            connected: true,
+            provider: "supabase",
+            message: "Supabase Cloud Database is Online & Connected!"
+          });
+          setIsTestingCloud(false);
+          return;
+        }
+      } catch (e) {
+        // Fallback to checkCloudStatus
+      }
+    }
     const res = await checkCloudStatus();
     setCloudStatus(res);
     setIsTestingCloud(false);
+  };
+
+  const handlePushToCloud = async () => {
+    if (isSyncing) return;
+    setIsSyncing(true);
+    setSyncMsg("Syncing laptop photos to Supabase Cloud...");
+    try {
+      const res = await syncLocalAlbumsToSupabase((pct, msg) => {
+        setSyncMsg(msg);
+      });
+      if (res && res.success) {
+        setSyncDone(true);
+        setSyncMsg(`Successfully uploaded ${res.uploadedPhotos || 0} photos to Supabase Cloud!`);
+        setTimeout(() => setSyncDone(false), 8000);
+      } else {
+        alert("Sync warning: " + (res?.error || "Unknown"));
+      }
+    } catch (err) {
+      alert("Sync error: " + err.message);
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   useEffect(() => {
@@ -54,24 +98,46 @@ export default function DashboardHome({ setActiveTab, onOpenCreateAlbumModal }) 
             Manage your portfolios, upload high-resolution wedding photos, update studio contact channels, and reply to client testimonials in real-time.
           </p>
 
-          <div className="mt-5 flex flex-wrap gap-3">
+          <div className="mt-5 flex flex-wrap gap-3 items-center">
+            {/* Direct 1-Click Push Button on Dashboard Home */}
+            <button
+              onClick={handlePushToCloud}
+              disabled={isSyncing}
+              className="bg-white text-[#E91E63] hover:bg-pink-50 px-4 py-2.5 rounded-xl text-xs font-black shadow-lg transition-transform active:scale-95 flex items-center space-x-2 border-2 border-white cursor-pointer"
+            >
+              {isSyncing ? (
+                <Loader2 className="w-4 h-4 animate-spin text-[#E91E63]" />
+              ) : (
+                <Cloud className="w-4 h-4 text-[#E91E63]" />
+              )}
+              <span>{isSyncing ? syncMsg || "Syncing..." : "☁️ Push Laptop Photos to Cloud"}</span>
+            </button>
+
             <button
               onClick={onOpenCreateAlbumModal}
-              className="bg-white text-[#E91E63] hover:bg-pink-50 px-4 py-2 rounded-xl text-xs font-bold shadow-sm transition-transform active:scale-95 flex items-center space-x-1.5"
+              className="bg-pink-800/80 hover:bg-pink-800 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-transform active:scale-95 flex items-center space-x-1.5 border border-pink-400/40"
             >
               <PlusCircle className="w-4 h-4" />
               <span>Create New Album</span>
             </button>
+
             <a
               href="/"
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-pink-800/60 hover:bg-pink-800 text-white px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center space-x-1.5 border border-pink-400/40"
+              className="bg-pink-900/60 hover:bg-pink-900 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-colors flex items-center space-x-1.5 border border-pink-400/30"
             >
               <span>View Public Profile</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
           </div>
+
+          {syncDone && (
+            <div className="mt-4 p-3 bg-emerald-500/90 text-white rounded-xl text-xs font-bold flex items-center space-x-2 animate-fade-in shadow-md">
+              <Check className="w-4 h-4 flex-shrink-0" />
+              <span>{syncMsg} Open the site on your phone now to view them!</span>
+            </div>
+          )}
         </div>
 
         {/* Ambient background decoration */}
@@ -103,8 +169,8 @@ export default function DashboardHome({ setActiveTab, onOpenCreateAlbumModal }) 
                 <div className="flex items-center space-x-2">
                   <span className="font-bold text-sm text-gray-900 dark:text-white">
                     {cloudStatus.connected
-                      ? "Firebase Cloud Database: Online & Connected"
-                      : "Action Needed: Activate Cloud Firestore in Firebase Console"}
+                      ? (cloudStatus.provider === "supabase" ? "Supabase Cloud: Online & Connected" : "Cloud Database: Online & Connected")
+                      : "Supabase Database Connecting..."}
                   </span>
                   <span
                     className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
@@ -113,37 +179,25 @@ export default function DashboardHome({ setActiveTab, onOpenCreateAlbumModal }) 
                         : "bg-amber-200 text-amber-900 dark:bg-amber-900/60 dark:text-amber-200"
                     }`}
                   >
-                    {cloudStatus.connected ? "Cloud Active" : "Pending 1-Click Setup"}
+                    {cloudStatus.connected ? "Cloud Active" : "Checking Cloud"}
                   </span>
                 </div>
 
                 <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
                   {cloudStatus.connected
-                    ? "Your changes, photos, and branding are permanently stored in Google Cloud Firestore & Storage, visible on all client phones and laptops instantly."
-                    : "Google Cloud requires creating the Firestore database for project 'future-events-kishore'. Until you click 'Create database' in Firebase Console, Google rejects cloud saves and changes only stay on this browser."}
+                    ? "Your portfolios and photos are connected to Supabase Cloud and sync permanently across all client phones, tablets, and laptops instantly."
+                    : "Connecting to Supabase Cloud Database. Make sure you have clicked 'Push Laptop Photos to Cloud' above to sync existing photos."}
                 </p>
 
-                {!cloudStatus.connected && (
-                  <div className="pt-2 flex flex-wrap gap-2">
-                    <a
-                      href="https://console.firebase.google.com/project/future-events-kishore/firestore"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center space-x-1.5 bg-[#E91E63] hover:bg-[#D81B60] text-white px-3.5 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-transform active:scale-95"
-                    >
-                      <span>1. Click to Create Firestore Database</span>
-                      <ArrowUpRight className="w-3.5 h-3.5" />
-                    </a>
-
-                    <a
-                      href="https://console.firebase.google.com/project/future-events-kishore/storage"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center space-x-1.5 bg-gray-900 dark:bg-zinc-800 hover:bg-black text-white px-3.5 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-transform active:scale-95"
-                    >
-                      <span>2. Click to Enable Storage Bucket</span>
-                      <ArrowUpRight className="w-3.5 h-3.5" />
-                    </a>
+                <div className="pt-2 flex flex-wrap gap-2">
+                  <button
+                    onClick={handlePushToCloud}
+                    disabled={isSyncing}
+                    className="inline-flex items-center space-x-1.5 bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-transform active:scale-95"
+                  >
+                    <Cloud className="w-3.5 h-3.5" />
+                    <span>{isSyncing ? "Syncing..." : "Push Photos to Cloud"}</span>
+                  </button>
 
                     <button
                       onClick={testConnection}
@@ -154,7 +208,6 @@ export default function DashboardHome({ setActiveTab, onOpenCreateAlbumModal }) 
                       <span>{isTestingCloud ? "Testing..." : "Test Connection"}</span>
                     </button>
                   </div>
-                )}
               </div>
             </div>
 
