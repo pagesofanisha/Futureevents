@@ -88,13 +88,6 @@ export default function AdminLoginPage() {
             </div>
           )}
 
-          {googleSuccess && (
-            <div className="mb-5 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-300 text-xs flex items-center space-x-2">
-              <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-              <span className="font-semibold">Access Authorized! Loading Admin Dashboard...</span>
-            </div>
-          )}
-
           {/* Method 1: Password Login */}
           <form onSubmit={handlePasswordSubmit} className="space-y-4">
             <div>
