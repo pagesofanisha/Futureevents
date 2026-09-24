@@ -88,6 +88,18 @@ export function AuthProvider({ children }) {
             localStorage.setItem("future_events_admin_user", JSON.stringify(user));
             setIsAdminLoggedIn(true);
             setAdminUser(user);
+          } else {
+            // Unauthorized Google account detected - force sign-out immediately
+            try {
+              await auth.signOut();
+            } catch (e) {
+              // Ignore
+            }
+            localStorage.removeItem("future_events_admin_token");
+            localStorage.removeItem("future_events_admin_expiry");
+            localStorage.removeItem("future_events_admin_user");
+            setIsAdminLoggedIn(false);
+            setAdminUser(null);
           }
         }
       });
@@ -116,63 +128,79 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Method 2: Google Sign-In with Authorized Email Whitelist Verification
-  const loginWithGoogle = async (enteredEmail = null) => {
-    let emailToVerify = (enteredEmail || "").trim().toLowerCase();
+  // Method 2: Google Sign-In with Strict Whitelist Verification
+  // The email MUST come directly from Google OAuth authentication.
+  const loginWithGoogle = async () => {
+    if (!isFirebaseConfigured || !auth) {
+      return {
+        success: false,
+        error: "Google Authentication is not configured in Firebase Console."
+      };
+    }
 
-    // If Firebase Auth is configured and no email was provided manually, launch real Google Popup
-    if (!emailToVerify && isFirebaseConfigured && auth) {
-      try {
-        const provider = new GoogleAuthProvider();
-        provider.setCustomParameters({ prompt: "select_account" });
-        const result = await signInWithPopup(auth, provider);
-        if (result && result.user && result.user.email) {
-          emailToVerify = result.user.email.trim().toLowerCase();
-        }
-      } catch (err) {
-        console.warn("Firebase Google popup error:", err);
+    try {
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
+      const result = await signInWithPopup(auth, provider);
+
+      if (!result || !result.user || !result.user.email) {
         return {
           success: false,
-          error: "Google sign-in popup closed or failed: " + (err.message || "Failed")
+          error: "Could not retrieve account details from Google. Please try again."
         };
       }
-    }
 
-    if (!emailToVerify) {
+      const emailToVerify = result.user.email.trim().toLowerCase();
+
+      // Fetch allowed admin emails from database
+      const creds = await getAuthCredentials();
+      const defaultAllowed = ["pagesofanisha@gmail.com", "futureeventskishore@gmail.com"];
+      const customAllowed = Array.isArray(creds?.allowedEmails) ? creds.allowedEmails : [];
+      const allowed = Array.from(new Set([...defaultAllowed, ...customAllowed])).map((e) => e.trim().toLowerCase());
+
+      // STRICT VERIFICATION: If the selected Google email is not in the whitelist, reject & kick out immediately!
+      if (!allowed.includes(emailToVerify)) {
+        try {
+          await auth.signOut();
+        } catch (e) {
+          // Ignore
+        }
+        localStorage.removeItem("future_events_admin_token");
+        localStorage.removeItem("future_events_admin_expiry");
+        localStorage.removeItem("future_events_admin_user");
+        setIsAdminLoggedIn(false);
+        setAdminUser(null);
+
+        return {
+          success: false,
+          error: `Access Denied: "${emailToVerify}" is not an authorized administrator. Only registered owner accounts (such as Kishore) can access this workspace.`
+        };
+      }
+
+      // Success! Verified authorized administrator
+      const expiry = Date.now() + INACTIVITY_TIMEOUT_MS;
+      localStorage.setItem("future_events_admin_token", "google_oauth_" + Date.now());
+      localStorage.setItem("future_events_admin_expiry", expiry.toString());
+      const user = {
+        name: result.user.displayName || emailToVerify.split("@")[0].replace(/[._-]/g, " "),
+        email: emailToVerify,
+        role: "Owner / Administrator",
+        loginMethod: "google",
+        verified: true
+      };
+      localStorage.setItem("future_events_admin_user", JSON.stringify(user));
+      setIsAdminLoggedIn(true);
+      setAdminUser(user);
+      return { success: true, user };
+    } catch (err) {
+      if (err.code === "auth/popup-closed-by-user" || err.code === "auth/cancelled-popup-request") {
+        return { success: false, error: "Google sign-in popup was closed before completing." };
+      }
       return {
         success: false,
-        error: "Please enter your Google account email to verify access."
+        error: "Google sign-in failed: " + (err.message || "Unknown error")
       };
     }
-
-    // Fetch allowed admin emails from backend database
-    const creds = await getAuthCredentials();
-    const defaultAllowed = ["pagesofanisha@gmail.com", "futureeventskishore@gmail.com"];
-    const customAllowed = Array.isArray(creds?.allowedEmails) ? creds.allowedEmails : [];
-    const allowed = Array.from(new Set([...defaultAllowed, ...customAllowed])).map((e) => e.trim().toLowerCase());
-
-    if (!allowed.includes(emailToVerify)) {
-      return {
-        success: false,
-        error: `Access Denied: "${emailToVerify}" is not an authorized administrator. Only whitelisted admin Google accounts configured in the backend can access this portal.`
-      };
-    }
-
-    // Success! Authorized administrator
-    const expiry = Date.now() + INACTIVITY_TIMEOUT_MS;
-    localStorage.setItem("future_events_admin_token", "google_oauth_" + Date.now());
-    localStorage.setItem("future_events_admin_expiry", expiry.toString());
-    const user = {
-      name: emailToVerify.split("@")[0].replace(/[._-]/g, " "),
-      email: emailToVerify,
-      role: "Owner / Administrator",
-      loginMethod: "google",
-      verified: true
-    };
-    localStorage.setItem("future_events_admin_user", JSON.stringify(user));
-    setIsAdminLoggedIn(true);
-    setAdminUser(user);
-    return { success: true, user };
   };
 
   const logout = () => {

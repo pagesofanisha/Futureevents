@@ -11,10 +11,21 @@ import AdminDashboardPage from "./pages/AdminDashboardPage";
 
 // Protected Route Component for Admin Dashboard
 function ProtectedAdminRoute({ children }) {
-  const { isAdminLoggedIn } = useAuth();
+  const { isAdminLoggedIn, adminUser, logout } = useAuth();
   if (!isAdminLoggedIn) {
     return <Navigate to="/admin/login" replace />;
   }
+
+  // Strict email verification for Google logins
+  if (adminUser?.loginMethod === "google") {
+    const email = (adminUser.email || "").trim().toLowerCase();
+    const defaultAllowed = ["pagesofanisha@gmail.com", "futureeventskishore@gmail.com"];
+    if (!email || !defaultAllowed.includes(email)) {
+      logout();
+      return <Navigate to="/admin/login" replace />;
+    }
+  }
+
   return children;
 }
 
