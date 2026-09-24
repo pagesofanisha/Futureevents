@@ -4,6 +4,7 @@ import {
   ChevronRight,
   ArrowLeft,
   Image as ImageIcon,
+  Video,
   Heart,
   Share2,
   Phone,
@@ -175,6 +176,54 @@ export default function AlbumDetailPage() {
             )}
           </div>
         </div>
+
+        {/* Section: Album Videos if present */}
+        {currentAlbum.videos && currentAlbum.videos.length > 0 && (
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl p-5 sm:p-8 shadow-sm border border-gray-100 dark:border-zinc-800 transition-colors">
+            <div className="flex items-center space-x-2 mb-6">
+              <div className="p-2 rounded-xl bg-pink-50 dark:bg-pink-950/60 text-[#E91E63]">
+                <Video className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+                  Event Highlights & Videos ({currentAlbum.videos.length})
+                </h2>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                  Cinematic reels and ceremony videos for {currentAlbum.name}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+              {currentAlbum.videos.map((vid, vIdx) => (
+                <div
+                  key={vid.id || vIdx}
+                  className="rounded-2xl overflow-hidden border border-gray-200 dark:border-zinc-800 bg-black shadow-sm"
+                >
+                  <div className="aspect-video w-full flex items-center justify-center">
+                    <video
+                      src={vid.url}
+                      controls
+                      playsInline
+                      preload="metadata"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="p-3 bg-white dark:bg-zinc-800">
+                    <h4 className="font-bold text-xs text-gray-900 dark:text-white truncate">
+                      {vid.title || `${currentAlbum.name} Video`}
+                    </h4>
+                    {vid.caption && (
+                      <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 truncate">
+                        {vid.caption}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Section: Other Event Albums from Future Event Organization */}
         {otherAlbums.length > 0 && (

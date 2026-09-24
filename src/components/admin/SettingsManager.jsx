@@ -10,11 +10,18 @@ import {
   Bell,
   Sliders,
   ShieldCheck,
-  Mail
+  Mail,
+  Cloud,
+  Database
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { useData } from "../../context/DataContext";
+import {
+  saveSupabaseConfig,
+  getActiveSupabaseConfig,
+  isSupabaseConfigured
+} from "../../config/supabase";
 
 export default function SettingsManager() {
   const { changePassword, getAllowedEmails, saveAllowedEmails } = useAuth();
@@ -84,6 +91,29 @@ export default function SettingsManager() {
   const [inquiryNotifications, setInquiryNotifications] = useState(settings.inquiryNotifications ?? true);
   const [reviewNotifications, setReviewNotifications] = useState(settings.emailNotifications ?? true);
   const [settingsSaved, setSettingsSaved] = useState(false);
+
+  // Supabase Cloud Storage & Database State
+  const activeSupabase = getActiveSupabaseConfig();
+  const [supabaseUrl, setSupabaseUrl] = useState(activeSupabase.url || "");
+  const [supabaseKey, setSupabaseKey] = useState("");
+  const [supabaseBucket, setSupabaseBucket] = useState(activeSupabase.bucket || "future-events");
+  const [supabaseSaved, setSupabaseSaved] = useState(false);
+  const [supabaseError, setSupabaseError] = useState("");
+
+  const handleSaveSupabase = (e) => {
+    e.preventDefault();
+    if (!supabaseUrl.trim() || !supabaseKey.trim()) {
+      setSupabaseError("Please enter both Supabase Project URL and Anon API Key.");
+      return;
+    }
+    saveSupabaseConfig(supabaseUrl, supabaseKey, supabaseBucket);
+    setSupabaseSaved(true);
+    setSupabaseError("");
+    setTimeout(() => {
+      setSupabaseSaved(false);
+      window.location.reload();
+    }, 1200);
+  };
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
@@ -426,6 +456,112 @@ export default function SettingsManager() {
               Save Preferences
             </button>
           </div>
+        </div>
+
+        {/* 4. SUPABASE CLOUD CONNECTION */}
+        <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 sm:p-8 border border-gray-100 dark:border-zinc-800 shadow-sm space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-zinc-800">
+            <div className="flex items-center space-x-2.5">
+              <div className="p-2 rounded-xl bg-pink-50 dark:bg-pink-950/60 text-[#E91E63]">
+                <Cloud className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white">
+                  Supabase Cloud (Storage & Database)
+                </h3>
+                <p className="text-xs text-gray-500">
+                  Store photos & videos permanently in Supabase Cloud Bucket
+                </p>
+              </div>
+            </div>
+
+            {isSupabaseConfigured ? (
+              <span className="text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 px-2.5 py-1 rounded-full flex items-center space-x-1">
+                <CheckCircle2 className="w-3 h-3" />
+                <span>Connected</span>
+              </span>
+            ) : (
+              <span className="text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 px-2.5 py-1 rounded-full flex items-center space-x-1">
+                <AlertCircle className="w-3 h-3" />
+                <span>Needs Credentials</span>
+              </span>
+            )}
+          </div>
+
+          <form onSubmit={handleSaveSupabase} className="space-y-3.5 text-xs max-w-lg">
+            {supabaseError && (
+              <div className="p-2.5 rounded-lg bg-red-50 text-red-700 border border-red-200 text-xs flex items-center space-x-1.5">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <span>{supabaseError}</span>
+              </div>
+            )}
+
+            {supabaseSaved && (
+              <div className="p-2.5 rounded-lg bg-green-50 text-green-700 border border-green-200 text-xs flex items-center space-x-1.5">
+                <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                <span>Supabase credentials saved successfully! Reloading...</span>
+              </div>
+            )}
+
+            <div>
+              <label className="block text-gray-700 dark:text-gray-300 font-semibold mb-1">
+                Supabase Project URL <span className="text-[#E91E63]">*</span>
+              </label>
+              <input
+                type="url"
+                required
+                value={supabaseUrl}
+                onChange={(e) => setSupabaseUrl(e.target.value)}
+                placeholder="https://xyzcompany.supabase.co"
+                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white focus:outline-none focus:border-[#E91E63]"
+              />
+              <span className="text-[10px] text-gray-400 mt-0.5 block">
+                Found in your Supabase project dashboard under Project Settings &gt; API
+              </span>
+            </div>
+
+            <div>
+              <label className="block text-gray-700 dark:text-gray-300 font-semibold mb-1">
+                Supabase Anon Public API Key <span className="text-[#E91E63]">*</span>
+              </label>
+              <input
+                type="password"
+                required
+                value={supabaseKey}
+                onChange={(e) => setSupabaseKey(e.target.value)}
+                placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white focus:outline-none focus:border-[#E91E63]"
+              />
+              <span className="text-[10px] text-gray-400 mt-0.5 block">
+                Your anon / public key (safe for client application access)
+              </span>
+            </div>
+
+            <div>
+              <label className="block text-gray-700 dark:text-gray-300 font-semibold mb-1">
+                Storage Bucket Name
+              </label>
+              <input
+                type="text"
+                value={supabaseBucket}
+                onChange={(e) => setSupabaseBucket(e.target.value)}
+                placeholder="future-events"
+                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white focus:outline-none focus:border-[#E91E63]"
+              />
+              <span className="text-[10px] text-gray-400 mt-0.5 block">
+                Default: <strong>future-events</strong> (public bucket for photos & videos)
+              </span>
+            </div>
+
+            <div className="pt-1">
+              <button
+                type="submit"
+                className="bg-[#E91E63] hover:bg-[#D81B60] text-white font-bold px-5 py-2 rounded-xl text-xs shadow-sm transition-transform active:scale-95"
+              >
+                Save Supabase Credentials
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>

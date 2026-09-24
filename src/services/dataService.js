@@ -9,6 +9,7 @@ import {
   onSnapshot
 } from "firebase/firestore";
 import { db, isFirebaseConfigured } from "../config/firebase";
+import { supabase, isSupabaseConfigured, SUPABASE_BUCKET } from "../config/supabase";
 import {
   initialBusinessData,
   initialContactData,
@@ -18,6 +19,7 @@ import {
   initialAuthData
 } from "../config/defaultData";
 import { idbGet, idbSet } from "./dbStorage";
+import { uploadImageFile } from "./storageService";
 
 const STORAGE_KEYS = {
   BUSINESS: "future_events_business_data",
@@ -76,6 +78,54 @@ function safeFirestoreSync(fn) {
       .catch((err) => {
         console.warn("Firestore sync skipped or rejected:", err.message);
       });
+  }
+}
+
+// Helper: Background sync to Supabase with a 8000ms timeout
+function safeSupabaseSync(fn) {
+  if (isSupabaseConfigured && supabase) {
+    Promise.race([
+      fn(),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Supabase sync timeout (8s)")), 8000)
+      )
+    ])
+      .then(() => {
+        console.log("⚡ Data successfully synced to Supabase Cloud!");
+      })
+      .catch((err) => {
+        console.warn("Supabase sync skipped or warning:", err.message);
+      });
+  }
+}
+
+/**
+ * Diagnostic tool to check live Supabase connection & Storage bucket status.
+ */
+export async function checkSupabaseStatus() {
+  if (!isSupabaseConfigured || !supabase) {
+    return {
+      connected: false,
+      reason: "Supabase URL and Anon Key not configured in .env or Settings."
+    };
+  }
+  try {
+    const { data, error } = await withTimeout(supabase.storage.getBucket(SUPABASE_BUCKET), 3500);
+    if (error && !error.message.includes("not found")) {
+      return {
+        connected: false,
+        reason: `Supabase Storage check: ${error.message}`
+      };
+    }
+    return {
+      connected: true,
+      message: `Supabase Cloud & Storage Bucket "${SUPABASE_BUCKET}" active & connected!`
+    };
+  } catch (err) {
+    return {
+      connected: false,
+      reason: err.message || "Supabase connection timed out."
+    };
   }
 }
 
@@ -217,22 +267,41 @@ export async function updateContactInfo(data) {
 }
 
 // -------------------------------------------------------------
-// ALBUMS & PHOTOS
+// ALBUMS, PHOTOS & VIDEOS
 // -------------------------------------------------------------
 export async function getAlbums() {
+  // 1. Check Supabase database if configured
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await withTimeout(
+        supabase.from("albums").select("*"),
+        2000
+      );
+      if (!error && Array.isArray(data) && data.length > 0) {
+        const parsed = data.map((item) => (item.data ? { ...item.data, id: item.id || item.data.id } : item));
+        setLocalItem(STORAGE_KEYS.ALBUMS, parsed);
+        return normalizeAlbums(parsed);
+      }
+    } catch (err) {
+      // Supabase table not created yet or read issue, fall through to local/Firestore
+    }
+  }
+
+  // 2. Check Firestore if configured
   if (isFirebaseConfigured && db) {
     try {
       const colRef = collection(db, "albums", "future_events_chennai", "items");
       const snap = await withTimeout(getDocs(colRef), 800);
       if (snap && !snap.empty) {
-        return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        return normalizeAlbums(items);
       }
     } catch (err) {
       // Fallback
     }
   }
 
-  // Check localStorage first
+  // 3. Check localStorage first
   let albums = getLocalItem(STORAGE_KEYS.ALBUMS, null);
   if (!albums || !Array.isArray(albums) || albums.length === 0) {
     // Check IndexedDB
@@ -245,44 +314,49 @@ export async function getAlbums() {
     } catch {}
   }
 
-  if (albums && Array.isArray(albums)) {
-    let changed = false;
-    albums = albums.map((a) => {
-      // 1. Strip any default/dummy unsplash images from album photos
-      let filteredPhotos = a.photos;
-      if (Array.isArray(a.photos)) {
-        filteredPhotos = a.photos.filter((p) => p.url && !p.url.includes("unsplash.com"));
-        if (filteredPhotos.length !== a.photos.length) {
-          changed = true;
-        }
-      } else {
-        filteredPhotos = [];
-      }
+  return normalizeAlbums(albums || initialAlbumsData);
+}
 
-      // 2. Clean thumbnail if it points to unsplash.com
-      let thumb = a.thumbnail;
-      if (thumb && thumb.includes("unsplash.com")) {
-        thumb = filteredPhotos[0]?.url || "";
-        changed = true;
-      } else if (!thumb && filteredPhotos.length > 0) {
-        thumb = filteredPhotos[0].url;
-        changed = true;
-      }
+function normalizeAlbums(rawAlbums) {
+  if (!rawAlbums || !Array.isArray(rawAlbums)) return initialAlbumsData;
+  let changed = false;
 
-      return {
-        ...a,
-        photos: filteredPhotos,
-        photoCount: filteredPhotos.length,
-        thumbnail: thumb
-      };
-    });
-
-    if (changed) {
-      setLocalItem(STORAGE_KEYS.ALBUMS, albums);
+  const processed = rawAlbums.map((a) => {
+    // 1. Clean Photos (strip unsplash dummies)
+    let filteredPhotos = [];
+    if (Array.isArray(a.photos)) {
+      filteredPhotos = a.photos.filter((p) => p && p.url && !p.url.includes("unsplash.com"));
+      if (filteredPhotos.length !== a.photos.length) changed = true;
     }
-  }
 
-  return albums || initialAlbumsData;
+    // 2. Clean Videos
+    let filteredVideos = Array.isArray(a.videos) ? a.videos : [];
+    if (!a.videos) changed = true;
+
+    // 3. Clean thumbnail if it points to unsplash.com
+    let thumb = a.thumbnail;
+    if (thumb && thumb.includes("unsplash.com")) {
+      thumb = filteredPhotos[0]?.url || "";
+      changed = true;
+    } else if (!thumb && filteredPhotos.length > 0) {
+      thumb = filteredPhotos[0].url;
+      changed = true;
+    }
+
+    return {
+      ...a,
+      photos: filteredPhotos,
+      videos: filteredVideos,
+      photoCount: filteredPhotos.length,
+      videoCount: filteredVideos.length,
+      thumbnail: thumb || ""
+    };
+  });
+
+  if (changed) {
+    setLocalItem(STORAGE_KEYS.ALBUMS, processed);
+  }
+  return processed;
 }
 
 export async function createAlbum(albumData) {
@@ -294,13 +368,27 @@ export async function createAlbum(albumData) {
     description: albumData.description || "",
     thumbnail: albumData.thumbnail || (albumData.photos?.[0]?.url || ""),
     photoCount: albumData.photos?.length || 0,
+    videoCount: albumData.videos?.length || 0,
     createdDate: new Date().toISOString().split("T")[0],
-    photos: albumData.photos || []
+    photos: albumData.photos || [],
+    videos: albumData.videos || []
   };
 
   const updatedAlbums = [newAlbum, ...albums];
   setLocalItem(STORAGE_KEYS.ALBUMS, updatedAlbums);
 
+  // Sync to Supabase
+  safeSupabaseSync(async () => {
+    await supabase.from("albums").upsert({
+      id: newAlbum.id,
+      name: newAlbum.name,
+      category: newAlbum.category,
+      data: newAlbum,
+      updated_at: new Date().toISOString()
+    }, { onConflict: "id" });
+  });
+
+  // Sync to Firestore
   safeFirestoreSync(async () => {
     await setDoc(doc(db, "albums", "future_events_chennai", "items", newAlbum.id), newAlbum);
   });
@@ -322,6 +410,9 @@ export async function updateAlbum(albumId, data) {
           updated.thumbnail = data.photos[0].url;
         }
       }
+      if (data.videos) {
+        updated.videoCount = data.videos.length;
+      }
       return updated;
     }
     return a;
@@ -329,12 +420,22 @@ export async function updateAlbum(albumId, data) {
 
   setLocalItem(STORAGE_KEYS.ALBUMS, updatedAlbums);
 
-  safeFirestoreSync(async () => {
-    const found = updatedAlbums.find(a => a.id === albumId);
-    if (found) {
+  const found = updatedAlbums.find(a => a.id === albumId);
+  if (found) {
+    safeSupabaseSync(async () => {
+      await supabase.from("albums").upsert({
+        id: albumId,
+        name: found.name,
+        category: found.category,
+        data: found,
+        updated_at: new Date().toISOString()
+      }, { onConflict: "id" });
+    });
+
+    safeFirestoreSync(async () => {
       await setDoc(doc(db, "albums", "future_events_chennai", "items", albumId), found, { merge: true });
-    }
-  });
+    });
+  }
 
   return updatedAlbums;
 }
@@ -343,6 +444,10 @@ export async function deleteAlbum(albumId) {
   const albums = await getAlbums();
   const updatedAlbums = albums.filter(a => a.id !== albumId);
   setLocalItem(STORAGE_KEYS.ALBUMS, updatedAlbums);
+
+  safeSupabaseSync(async () => {
+    await supabase.from("albums").delete().eq("id", albumId);
+  });
 
   safeFirestoreSync(async () => {
     await deleteDoc(doc(db, "albums", "future_events_chennai", "items", albumId));
@@ -391,6 +496,140 @@ export async function deletePhotoFromAlbum(albumId, photoId) {
 
   await updateAlbum(albumId, updatedData);
   return filteredPhotos;
+}
+
+export async function addVideoToAlbum(albumId, video) {
+  const albums = await getAlbums();
+  const album = albums.find(a => a.id === albumId);
+  if (!album) throw new Error("Album not found");
+
+  const newVideo = {
+    id: `video-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    url: video.url,
+    title: video.title || `${album.name} Highlight`,
+    caption: video.caption || "",
+    thumbnail: video.thumbnail || album.thumbnail || "",
+    duration: video.duration || "",
+    uploadedAt: new Date().toISOString(),
+    type: "video"
+  };
+
+  const currentVideos = Array.isArray(album.videos) ? album.videos : [];
+  const newVideos = [newVideo, ...currentVideos];
+
+  const updatedData = {
+    videos: newVideos,
+    videoCount: newVideos.length
+  };
+
+  await updateAlbum(albumId, updatedData);
+  return newVideo;
+}
+
+export async function deleteVideoFromAlbum(albumId, videoId) {
+  const albums = await getAlbums();
+  const album = albums.find(a => a.id === albumId);
+  if (!album) throw new Error("Album not found");
+
+  const currentVideos = Array.isArray(album.videos) ? album.videos : [];
+  const filteredVideos = currentVideos.filter(v => v.id !== videoId);
+
+  const updatedData = {
+    videos: filteredVideos,
+    videoCount: filteredVideos.length
+  };
+
+  await updateAlbum(albumId, updatedData);
+  return filteredVideos;
+}
+
+export async function getAllVideos() {
+  const albums = await getAlbums();
+  return albums.flatMap(album =>
+    (album.videos || []).map(video => ({
+      ...video,
+      albumId: album.id,
+      albumName: album.name,
+      albumCategory: album.category
+    }))
+  );
+}
+
+/**
+ * Uploads all albums, photos, and videos from the current device's local storage
+ * directly into Supabase Storage and Supabase Cloud Database.
+ * This ensures photos uploaded from laptop immediately load on phones and all devices!
+ */
+export async function syncLocalAlbumsToSupabase(onProgress = null) {
+  if (!isSupabaseConfigured || !supabase) {
+    throw new Error("Supabase is not configured. Please verify credentials in Settings.");
+  }
+
+  // 1. Get current albums (from localStorage/IndexedDB)
+  const localAlbums = await getAlbums();
+  if (!localAlbums || !Array.isArray(localAlbums) || localAlbums.length === 0) {
+    throw new Error("No albums found in local storage to sync.");
+  }
+
+  let totalMedia = 0;
+  localAlbums.forEach((a) => {
+    totalMedia += (a.photos || []).length;
+    totalMedia += (a.videos || []).length;
+  });
+
+  if (onProgress) onProgress(10, `Preparing ${localAlbums.length} albums with ${totalMedia} media files...`);
+
+  let processed = 0;
+  const updatedAlbums = [];
+
+  for (const album of localAlbums) {
+    const updatedPhotos = [];
+    for (const photo of (album.photos || [])) {
+      let finalUrl = photo.url;
+      // If photo is stored as base64 Data URL, upload it to Supabase Storage
+      if (finalUrl && finalUrl.startsWith("data:")) {
+        try {
+          const path = `albums/${album.id}/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.jpg`;
+          finalUrl = await uploadImageFile(finalUrl, path);
+        } catch (e) {
+          console.warn("Failed to upload base64 image to Supabase Storage:", e.message);
+        }
+      }
+      updatedPhotos.push({ ...photo, url: finalUrl });
+      processed++;
+      if (onProgress && totalMedia > 0) {
+        onProgress(15 + Math.round((processed / totalMedia) * 70), `Uploading media ${processed} of ${totalMedia} to Supabase...`);
+      }
+    }
+
+    const updatedAlbum = {
+      ...album,
+      photos: updatedPhotos,
+      thumbnail: updatedPhotos[0]?.url || album.thumbnail || "",
+      photoCount: updatedPhotos.length
+    };
+
+    updatedAlbums.push(updatedAlbum);
+
+    // Upsert into Supabase albums table
+    const { error } = await supabase.from("albums").upsert({
+      id: updatedAlbum.id,
+      name: updatedAlbum.name,
+      category: updatedAlbum.category,
+      data: updatedAlbum,
+      updated_at: new Date().toISOString()
+    }, { onConflict: "id" });
+
+    if (error) {
+      console.error("Supabase upsert error:", error);
+      throw new Error(`Failed to save album "${updatedAlbum.name}" to Supabase: ${error.message}. Please run the SQL setup script in your Supabase dashboard.`);
+    }
+  }
+
+  // Update local cache with cloud URLs
+  setLocalItem(STORAGE_KEYS.ALBUMS, updatedAlbums);
+  if (onProgress) onProgress(100, `Successfully synced ${updatedAlbums.length} albums and ${processed} photos to Supabase Cloud!`);
+  return updatedAlbums;
 }
 
 // -------------------------------------------------------------
@@ -599,7 +838,11 @@ export async function getAllDatabaseData() {
     meta: {
       businessName: business.businessName || "Future Event Organization",
       exportedAt: new Date().toISOString(),
-      storageEngine: isFirebaseConfigured ? "Firebase Cloud Firestore + Cloud Storage" : "Browser Local Persistence Engine (LocalStorage)",
+      storageEngine: isSupabaseConfigured
+        ? "Supabase Cloud (Storage + Database) + Firebase & Offline Sync"
+        : isFirebaseConfigured
+        ? "Firebase Cloud Firestore + Cloud Storage"
+        : "Browser Local Persistence Engine (LocalStorage + IndexedDB)",
       collectionsCount: 6
     },
     business,

@@ -240,9 +240,11 @@ export const initialAlbumsData = [
     category: "Baby Shower (Valaikappu)",
     thumbnail: "",
     photoCount: 0,
+    videoCount: 0,
     description: "Traditional valaikappu floral stages, seating, and ceremony setups.",
     createdDate: "2024-03-20",
-    photos: []
+    photos: [],
+    videos: []
   },
   {
     id: "album-weddings",
@@ -250,9 +252,11 @@ export const initialAlbumsData = [
     category: "Weddings",
     thumbnail: "",
     photoCount: 0,
+    videoCount: 0,
     description: "Royal stage decors, traditional South Indian mandaps, and grand floral installations.",
     createdDate: "2024-01-15",
-    photos: []
+    photos: [],
+    videos: []
   },
   {
     id: "album-photography",
@@ -260,9 +264,11 @@ export const initialAlbumsData = [
     category: "Photography",
     thumbnail: "",
     photoCount: 0,
+    videoCount: 0,
     description: "Candid emotional wedding portraits, rituals, and unforgettable family smiles.",
     createdDate: "2024-02-10",
-    photos: []
+    photos: [],
+    videos: []
   },
   {
     id: "album-haldi",
@@ -270,9 +276,11 @@ export const initialAlbumsData = [
     category: "Haldi & Sangeet",
     thumbnail: "",
     photoCount: 0,
+    videoCount: 0,
     description: "Vibrant yellow marigold decors, traditional urlis, and joyful festive setups.",
     createdDate: "2024-03-01",
-    photos: []
+    photos: [],
+    videos: []
   },
   {
     id: "album-catering",
@@ -280,9 +288,11 @@ export const initialAlbumsData = [
     category: "Catering & Food",
     thumbnail: "",
     photoCount: 0,
+    videoCount: 0,
     description: "Authentic South Indian plantain leaf spreads, variety rice, and dessert buffet.",
     createdDate: "2024-03-20",
-    photos: []
+    photos: [],
+    videos: []
   },
   {
     id: "album-birthdays",
@@ -290,9 +300,11 @@ export const initialAlbumsData = [
     category: "Birthdays",
     thumbnail: "",
     photoCount: 0,
+    videoCount: 0,
     description: "Theme setups, organic balloon arches, marquee letters, and dessert backdrops.",
     createdDate: "2024-04-05",
-    photos: []
+    photos: [],
+    videos: []
   }
 ];
 

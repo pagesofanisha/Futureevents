@@ -27,6 +27,15 @@ export default function PortfolioGrid({ onOpenLightbox }) {
       }))
   );
 
+  // Flatten all videos for the Videos tab
+  const allVideos = albums.flatMap((album) =>
+    (album.videos || []).map((v) => ({
+      ...v,
+      albumName: album.name,
+      albumId: album.id,
+    }))
+  );
+
   // Initial images count from settings (default 8, configurable 5-10)
   const initialLimit = settings.imagesPerPage || 8;
   const [displayCount, setDisplayCount] = useState(initialLimit);
@@ -90,7 +99,7 @@ export default function PortfolioGrid({ onOpenLightbox }) {
             }`}
           >
             <Video className="w-4 h-4" />
-            <span>Videos (0)</span>
+            <span>Videos ({allVideos.length})</span>
           </button>
         </div>
 
@@ -209,12 +218,51 @@ export default function PortfolioGrid({ onOpenLightbox }) {
           </div>
         )}
 
-        {/* Tab 3: Videos (Empty State) */}
+        {/* Tab 3: Videos Grid */}
         {activeTab === "videos" && (
-          <div className="py-12 text-center text-gray-400">
-            <Video className="w-12 h-12 mx-auto mb-3 opacity-40" />
-            <p className="font-semibold text-sm">No videos uploaded yet</p>
-            <p className="text-xs text-gray-500 mt-1">Cinematic reels and event videos will appear here once added.</p>
+          <div>
+            {allVideos.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                {allVideos.map((video, idx) => (
+                  <div
+                    key={video.id || idx}
+                    className="group rounded-2xl overflow-hidden border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-800/80 shadow-sm hover:shadow-xl transition-all"
+                  >
+                    <div className="relative aspect-video w-full bg-black flex items-center justify-center overflow-hidden">
+                      <video
+                        src={video.url}
+                        controls
+                        playsInline
+                        preload="metadata"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="p-4">
+                      <div className="flex items-center justify-between text-xs text-[#E91E63] font-semibold mb-1">
+                        <span>{video.albumName}</span>
+                        {video.duration && <span>{video.duration}</span>}
+                      </div>
+                      <h4 className="font-bold text-sm text-gray-900 dark:text-white line-clamp-1">
+                        {video.title || `${video.albumName} Video Highlight`}
+                      </h4>
+                      {video.caption && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
+                          {video.caption}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="py-12 text-center text-gray-400">
+                <Video className="w-12 h-12 mx-auto mb-3 opacity-40 text-[#E91E63]" />
+                <p className="font-semibold text-sm text-gray-700 dark:text-gray-300">No videos uploaded yet</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Upload wedding highlights, cinematic teasers, and event videos in the Admin Dashboard to Supabase.
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -10,12 +10,15 @@ import {
   deleteAlbum,
   addPhotoToAlbum,
   deletePhotoFromAlbum,
+  addVideoToAlbum,
+  deleteVideoFromAlbum,
   getReviews,
   addCustomerReview,
   updateReview,
   deleteReview,
   getSettings,
-  updateSettings
+  updateSettings,
+  syncLocalAlbumsToSupabase
 } from "../services/dataService";
 import {
   initialBusinessData,
@@ -164,6 +167,18 @@ export function DataProvider({ children }) {
     return res;
   };
 
+  const handleAddVideo = async (albumId, video) => {
+    const res = await addVideoToAlbum(albumId, video);
+    await refreshAllData();
+    return res;
+  };
+
+  const handleDeleteVideo = async (albumId, videoId) => {
+    const res = await deleteVideoFromAlbum(albumId, videoId);
+    await refreshAllData();
+    return res;
+  };
+
   const handleAddCustomerReview = async (reviewData) => {
     const res = await addCustomerReview(reviewData);
     await refreshAllData();
@@ -188,6 +203,12 @@ export function DataProvider({ children }) {
     return res;
   };
 
+  const handleSyncToSupabase = async (onProgress) => {
+    const res = await syncLocalAlbumsToSupabase(onProgress);
+    await refreshAllData();
+    return res;
+  };
+
   return (
     <DataContext.Provider
       value={{
@@ -205,6 +226,9 @@ export function DataProvider({ children }) {
         deleteAlbum: handleDeleteAlbum,
         addPhotoToAlbum: handleAddPhoto,
         deletePhotoFromAlbum: handleDeletePhoto,
+        addVideoToAlbum: handleAddVideo,
+        deleteVideoFromAlbum: handleDeleteVideo,
+        syncLocalAlbumsToSupabase: handleSyncToSupabase,
         addCustomerReview: handleAddCustomerReview,
         updateReview: handleUpdateReview,
         deleteReview: handleDeleteReview,

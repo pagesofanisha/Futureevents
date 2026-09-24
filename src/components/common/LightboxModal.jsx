@@ -29,6 +29,10 @@ export default function LightboxModal({
   if (!isOpen || photos.length === 0) return null;
 
   const currentPhoto = photos[currentIndex] || photos[0];
+  const mediaUrl = currentPhoto.url || currentPhoto;
+  const isVideo =
+    currentPhoto.type === "video" ||
+    (typeof mediaUrl === "string" && (mediaUrl.includes(".mp4") || mediaUrl.includes(".webm") || mediaUrl.includes(".mov") || mediaUrl.includes("/videos/")));
 
   const handlePrev = (e) => {
     if (e) e.stopPropagation();
@@ -50,7 +54,7 @@ export default function LightboxModal({
       {/* Top Bar */}
       <div className="flex justify-between items-center text-white z-10" onClick={(e) => e.stopPropagation()}>
         <div className="text-sm font-medium opacity-90">
-          Photo {currentIndex + 1} of {photos.length}
+          {isVideo ? "Video" : "Photo"} {currentIndex + 1} of {photos.length}
         </div>
         <button
           onClick={onClose}
@@ -61,7 +65,7 @@ export default function LightboxModal({
         </button>
       </div>
 
-      {/* Main Image Container */}
+      {/* Main Media Container */}
       <div
         className="relative flex-1 flex items-center justify-center max-h-[80vh] my-auto"
         onClick={(e) => e.stopPropagation()}
@@ -70,21 +74,31 @@ export default function LightboxModal({
         <button
           onClick={handlePrev}
           className="absolute left-2 sm:left-4 z-20 p-3 rounded-full bg-[#E91E63] text-white hover:bg-[#D81B60] transition-transform transform active:scale-90 shadow-lg focus:outline-none"
-          title="Previous Photo (Left Arrow)"
+          title="Previous (Left Arrow)"
         >
           <ChevronLeft className="w-6 h-6" />
         </button>
 
-        {/* The Image */}
+        {/* The Media (Video or Image) */}
         <div className="relative max-h-full max-w-5xl flex flex-col items-center">
-          <img
-            src={currentPhoto.url || currentPhoto}
-            alt={currentPhoto.caption || "Event Photo"}
-            className="max-h-[75vh] w-auto max-w-full object-contain rounded-lg shadow-2xl transition-opacity duration-300"
-          />
-          {currentPhoto.caption && (
+          {isVideo ? (
+            <video
+              src={mediaUrl}
+              controls
+              autoPlay
+              playsInline
+              className="max-h-[75vh] w-auto max-w-full rounded-lg shadow-2xl"
+            />
+          ) : (
+            <img
+              src={mediaUrl}
+              alt={currentPhoto.caption || "Event Photo"}
+              className="max-h-[75vh] w-auto max-w-full object-contain rounded-lg shadow-2xl transition-opacity duration-300"
+            />
+          )}
+          {(currentPhoto.caption || currentPhoto.title) && (
             <p className="mt-3 text-center text-white/90 text-sm font-light max-w-2xl px-4 py-1.5 bg-black/60 rounded-full backdrop-blur-md">
-              {currentPhoto.caption}
+              {currentPhoto.title ? `${currentPhoto.title} - ` : ""}{currentPhoto.caption}
             </p>
           )}
         </div>
