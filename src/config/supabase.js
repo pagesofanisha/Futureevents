@@ -19,12 +19,12 @@ const localConfig = getStoredConfig();
 export const SUPABASE_URL =
   getEnv("VITE_SUPABASE_URL") ||
   localConfig.supabaseUrl ||
-  "https://uopzudnfgaibnakmzpdr.supabase.co";
+  "https://atbxlkehmwjvzymqjimw.supabase.co";
 
 export const SUPABASE_ANON_KEY =
   getEnv("VITE_SUPABASE_ANON_KEY") ||
   localConfig.supabaseKey ||
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVvcHp1ZG5mZ2FpYm5ha216cGRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNTIxMTIsImV4cCI6MjEwNTYyODExMn0.HrwxeDWpfVgPKnLFYK4FLHPu237MSoo5qdchoUYazjs";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0Ynhsa2VobXdqdnp5bXFqaW13Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyNjA1OTAsImV4cCI6MjEwNTgzNjU5MH0.APDnLMFbqLeTwJCQ0nHNCyH5hKUNOyukfWpzS3jP-Qo";
 
 export const SUPABASE_BUCKET =
   getEnv("VITE_SUPABASE_BUCKET") || localConfig.supabaseBucket || "future-events";
